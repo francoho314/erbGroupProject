@@ -15,6 +15,7 @@
                 <h1 class="section-title">Browse Our Collection</h1>
                 <span class="badge bg-primary fs-6">{{ books|length }} books found</span>
             </div>
+            <p class="text-muted">Discover our curated selection of books across all genres</p>
         </div>
     </div>
 
@@ -66,7 +67,7 @@
             <!-- Quick Stats -->
             <div class="card border-0 shadow-sm mt-4">
                 <div class="card-body">
-                    <h6 class="card-title">Collection Stats</h6>
+                    <h6 class="card-title"><i class="fas fa-chart-bar me-2"></i>Collection Stats</h6>
                     <div class="d-flex justify-content-between mb-2">
                         <span class="text-muted">Total Books:</span>
                         <strong>{{ books.paginator.count }}</strong>
@@ -75,6 +76,27 @@
                         <span class="text-muted">In Stock:</span>
                         <strong>{{ books|length }}</strong>
                     </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Genres:</span>
+                        <strong>{{ form.genre.field.queryset.count }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Featured Authors -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="fas fa-users me-2"></i>Featured Authors</h6>
+                    {% for author in form.author.field.queryset|slice:":5" %}
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px;">
+                            <i class="fas fa-user text-white small"></i>
+                        </div>
+                        <a href="{% url 'author_detail' author.AuthorID %}" class="text-decoration-none small">
+                            {{ author.full_name }}
+                        </a>
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
@@ -98,6 +120,7 @@
             </div>
 
             <!-- Books Grid -->
+            {% if books %}
             <div class="row">
                 {% for book in books %}
                 <div class="col-xl-4 col-lg-6 mb-4">
@@ -143,15 +166,17 @@
                         </div>
                     </div>
                 </div>
-                {% empty %}
-                <div class="col-12 text-center py-5">
-                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
-                    <h4 class="text-muted">No books found</h4>
-                    <p class="text-muted">Try adjusting your search filters</p>
-                    <a href="{% url 'book_list' %}" class="btn btn-primary-custom">Clear Filters</a>
-                </div>
                 {% endfor %}
             </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No books found</h4>
+                <p class="text-muted mb-4">Try adjusting your search filters or browse our full collection</p>
+                <a href="{% url 'book_list' %}" class="btn btn-primary-custom me-2">Clear Filters</a>
+                <a href="{% url 'home' %}" class="btn btn-outline-primary">Return Home</a>
+            </div>
+            {% endif %}
 
             <!-- Pagination -->
             {% if books.has_other_pages %}
@@ -159,19 +184,29 @@
                 <ul class="pagination justify-content-center">
                     {% if books.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ books.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Previous</a>
+                        <a class="page-link" href="?page={{ books.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
                     </li>
                     {% endif %}
                     
                     {% for i in books.paginator.page_range %}
-                    <li class="page-item {% if books.number == i %}active{% endif %}">
-                        <a class="page-link" href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ i }}</a>
-                    </li>
+                        {% if books.number == i %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ i }}</span>
+                        </li>
+                        {% elif i > books.number|add:'-3' and i < books.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ i }}</a>
+                        </li>
+                        {% endif %}
                     {% endfor %}
                     
                     {% if books.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ books.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
+                        <a class="page-link" href="?page={{ books.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
                     </li>
                     {% endif %}
                 </ul>

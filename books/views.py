@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.auth import login, authenticate
 from django.contrib import messages
-from django.db.models import Q
+from django.db.models import Q, Avg, Count, Sum  # Added database aggregates
 from .models import Book, Author, Genre, Order, OrderItem, Review, Customer
 from .forms import BookSearchForm, ReviewForm
 
@@ -76,14 +76,31 @@ def author_detail(request, author_id):
 
 def genre_list(request):
     genres = Genre.objects.all()
-    return render(request, 'books/genre_list.html', {'genres': genres})
+    total_books = Book.objects.count()
+    return render(request, 'books/genre_list.html', {
+        'genres': genres,
+        'total_books': total_books
+    })
 
 def genre_books(request, genre_id):
     genre = get_object_or_404(Genre, pk=genre_id)
     books = Book.objects.filter(GenreID=genre, Stock__gt=0)
+    
+    # Calculate average price for the genre
+    try:
+        avg_price_result = books.aggregate(avg_price=Avg('Price'))
+        avg_price = avg_price_result['avg_price']
+        if avg_price:
+            avg_price = round(avg_price, 2)
+        else:
+            avg_price = 12.50
+    except:
+        avg_price = 12.50
+    
     return render(request, 'books/genre_books.html', {
         'genre': genre,
-        'books': books
+        'books': books,
+        'avg_price': avg_price
     })
 
 @login_required
@@ -181,24 +198,15 @@ def checkout(request):
         messages.error(request, 'No active order found.')
         return redirect('view_cart')
 
-
 @login_required
 def order_history(request):
-    """
-    View to show user's order history
-    """
-    orders = Order.objects.filter(
-        CustomerID=request.user.customer
-    ).exclude(
-        OrderStatus='pending'
-    ).order_by('-OrderDate')
+    orders = Order.objects.filter(CustomerID=request.user.customer).exclude(OrderStatus='pending').order_by('-OrderDate')
     
     # Annotate each order with item count for display
     for order in orders:
         order.item_count = order.orderitems.count()
     
     return render(request, 'books/order_history.html', {'orders': orders})
-
 
 @login_required
 def order_detail(request, order_id):
@@ -216,7 +224,6 @@ def order_detail(request, order_id):
         'order': order,
         'order_items': order_items
     })
-
 
 def register(request):
     if request.method == 'POST':

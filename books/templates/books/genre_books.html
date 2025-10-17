@@ -1,36 +1,154 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>Books in {{ genre.GenreName }}</h1>
-<div class="row">
-    {% for book in books %}
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <img src="{{ book.photo_url }}" class="card-img-top" alt="{{ book.Title }}" style="height: 250px; object-fit: cover;">
-            <div class="card-body">
-                <h5 class="card-title">{{ book.Title }}</h5>
-                <p class="card-text">{{ book.AuthorID.full_name }}</p>
-                <p class="card-text">${{ book.Price }}</p>
-                <p class="card-text">
-                    {% if book.is_available %}
-                        <span class="badge bg-success">In Stock</span>
-                    {% else %}
-                        <span class="badge bg-danger">Out of Stock</span>
-                    {% endif %}
-                </p>
+<div class="container mt-4">
+    <!-- Page Header -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'genre_list' %}">Genres</a></li>
+                    <li class="breadcrumb-item active">{{ genre.GenreName }}</li>
+                </ol>
+            </nav>
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="section-title">{{ genre.GenreName }} Books</h1>
+                <span class="badge bg-primary fs-6">{{ books|length }} books</span>
             </div>
-            <div class="card-footer">
-                <a href="{% url 'book_detail' book.BookID %}" class="btn btn-primary btn-sm">View Details</a>
-                {% if book.is_available and user.is_authenticated %}
-                    <a href="{% url 'add_to_cart' book.BookID %}" class="btn btn-success btn-sm">Add to Cart</a>
-                {% endif %}
-            </div>
+            <p class="text-muted">Discover our collection of {{ genre.GenreName|lower }} books</p>
         </div>
     </div>
-    {% empty %}
-    <div class="col-12">
-        <p>No books found in this genre.</p>
+
+    <div class="row">
+        <!-- Genre Info Sidebar -->
+        <div class="col-lg-3 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="genre-icon-large mb-3">
+                        <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                            <i class="fas fa-book fa-3x text-white"></i>
+                        </div>
+                    </div>
+                    <h4 class="card-title">{{ genre.GenreName }}</h4>
+                    <p class="text-muted small">
+                        {{ books|length }} book{{ books|length|pluralize }} available
+                    </p>
+                    
+                    <div class="genre-stats mb-4">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="fw-bold text-primary">${{ avg_price|default:"12.50" }}</div>
+                                <small class="text-muted">Avg Price</small>
+                            </div>
+                            <div class="col-6">
+                                <div class="fw-bold text-primary">4.3★</div>
+                                <small class="text-muted">Avg Rating</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="{% url 'genre_list' %}" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-arrow-left me-1"></i>All Genres
+                    </a>
+                </div>
+            </div>
+
+            <!-- Popular in Genre -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body">
+                    <h6 class="card-title">Popular in {{ genre.GenreName }}</h6>
+                    {% for book in books|slice:":3" %}
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="{{ book.photo_url }}" alt="{{ book.Title }}" class="rounded me-3" style="width: 50px; height: 70px; object-fit: cover;">
+                        <div>
+                            <div class="fw-semibold small">{{ book.Title|truncatewords:3 }}</div>
+                            <div class="text-muted xsmall">by {{ book.AuthorID.first_name }}</div>
+                            <div class="rating-stars xsmall">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star-half-alt"></i>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Books Grid -->
+        <div class="col-lg-9">
+            {% if books %}
+            <div class="row">
+                {% for book in books %}
+                <div class="col-xl-4 col-lg-6 mb-4">
+                    <div class="book-card h-100">
+                        <div class="position-relative">
+                            <img src="{{ book.photo_url }}" class="book-image w-100" alt="{{ book.Title }}">
+                            {% if forloop.counter <= 2 %}
+                            <span class="discount-badge">Bestseller</span>
+                            {% endif %}
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <h6 class="card-title">{{ book.Title }}</h6>
+                            <p class="text-muted small mb-2">by {{ book.AuthorID.full_name }}</p>
+                            <div class="rating-stars small mb-2">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star-half-alt"></i>
+                                <small class="text-muted ms-1">(128)</small>
+                            </div>
+                            <div class="mt-auto">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="price-tag">${{ book.Price }}</span>
+                                    {% if book.is_available %}
+                                        <span class="badge bg-success">In Stock</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Out of Stock</span>
+                                    {% endif %}
+                                </div>
+                                <div class="d-grid gap-2">
+                                    <a href="{% url 'book_detail' book.BookID %}" class="btn btn-outline-primary btn-sm">View Details</a>
+                                    {% if book.is_available and user.is_authenticated %}
+                                        <a href="{% url 'add_to_cart' book.BookID %}" class="btn btn-primary-custom btn-sm">
+                                            <i class="fas fa-cart-plus me-1"></i>Add to Cart
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No books in this genre</h4>
+                <p class="text-muted mb-4">We're working on adding more {{ genre.GenreName|lower }} books to our collection</p>
+                <a href="{% url 'genre_list' %}" class="btn btn-primary-custom me-2">Browse Other Genres</a>
+                <a href="{% url 'book_list' %}" class="btn btn-outline-primary">View All Books</a>
+            </div>
+            {% endif %}
+        </div>
     </div>
-    {% endfor %}
 </div>
+
+<style>
+.genre-icon-large {
+    transition: transform 0.3s ease;
+}
+
+.genre-icon-large:hover {
+    transform: scale(1.05);
+}
+
+.xsmall {
+    font-size: 0.75rem;
+}
+</style>
 {% endblock %}

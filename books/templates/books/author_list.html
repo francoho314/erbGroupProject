@@ -1,29 +1,99 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>Authors</h1>
-<div class="row">
-    {% for author in authors %}
-    <div class="col-md-4 mb-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">{{ author.full_name }}</h5>
-                {% if author.DateOfBirth %}
-                    <p class="card-text">
-                        <strong>Born:</strong> {{ author.DateOfBirth|date:"F d, Y" }}
+<div class="container mt-4">
+    <!-- Page Header -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                    <li class="breadcrumb-item active">Authors</li>
+                </ol>
+            </nav>
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="section-title">Our Authors</h1>
+                <span class="badge bg-primary fs-6">{{ authors|length }} authors</span>
+            </div>
+            <p class="text-muted">Discover the brilliant minds behind your favorite books</p>
+        </div>
+    </div>
+
+    <!-- Authors Grid -->
+    <div class="row">
+        {% for author in authors %}
+        <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+            <div class="card author-card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="author-avatar mb-3">
+                        <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <i class="fas fa-user fa-2x text-white"></i>
+                        </div>
+                    </div>
+                    <h5 class="card-title">{{ author.full_name }}</h5>
+                    {% if author.DateOfBirth %}
+                    <p class="text-muted small mb-2">
+                        <i class="fas fa-birthday-cake me-1"></i>
+                        Born {{ author.DateOfBirth|date:"Y" }}
                     </p>
-                {% endif %}
-                {% if author.Bio %}
-                    <p class="card-text">{{ author.Bio|truncatewords:30 }}</p>
-                {% endif %}
-                <a href="{% url 'author_detail' author.AuthorID %}" class="btn btn-primary">View Author</a>
+                    {% endif %}
+                    <p class="card-text small text-muted mb-3">
+                        {{ author.Bio|truncatewords:20|default:"Acclaimed author with multiple published works." }}
+                    </p>
+                    <div class="author-stats mb-3">
+                        <span class="badge bg-light text-dark">
+                            <i class="fas fa-book me-1"></i>
+                            {{ author.book_set.count }} book{{ author.book_set.count|pluralize }}
+                        </span>
+                    </div>
+                    <a href="{% url 'author_detail' author.AuthorID %}" class="btn btn-outline-primary btn-sm">
+                        View Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">No authors found</h4>
+            <p class="text-muted">Check back later for our author profiles</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Alphabetical Navigation -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Browse Authors Alphabetically</h5>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" %}
+                        <a href="#{{ letter }}" class="btn btn-outline-secondary btn-sm">{{ letter }}</a>
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    {% empty %}
-    <div class="col-12">
-        <p>No authors found.</p>
-    </div>
-    {% endfor %}
 </div>
+
+<style>
+.author-card {
+    transition: all 0.3s ease;
+}
+
+.author-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+.author-avatar {
+    transition: transform 0.3s ease;
+}
+
+.author-card:hover .author-avatar {
+    transform: scale(1.1);
+}
+</style>
 {% endblock %}

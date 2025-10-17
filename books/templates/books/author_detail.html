@@ -1,45 +1,149 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h2>{{ author.full_name }}</h2>
-                {% if author.DateOfBirth %}
-                    <p><strong>Born:</strong> {{ author.DateOfBirth|date:"F d, Y" }}</p>
-                {% endif %}
-                {% if author.DateOfDeath %}
-                    <p><strong>Died:</strong> {{ author.DateOfDeath|date:"F d, Y" }}</p>
-                {% endif %}
-                {% if author.Bio %}
-                    <p>{{ author.Bio }}</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-8">
-        <h3>Books by {{ author.full_name }}</h3>
-        <div class="row">
-            {% for book in books %}
-            <div class="col-md-6 mb-3">
-                <div class="card h-100">
-                    <img src="{{ book.photo_url }}" class="card-img-top" alt="{{ book.Title }}" style="height: 200px; object-fit: cover;">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ book.Title }}</h5>
-                        <p class="card-text">{{ book.GenreID.GenreName }}</p>
-                        <p class="card-text">${{ book.Price }}</p>
-                        <a href="{% url 'book_detail' book.BookID %}" class="btn btn-primary btn-sm">View Details</a>
+<div class="container mt-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'author_list' %}">Authors</a></li>
+            <li class="breadcrumb-item active">{{ author.full_name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Author Profile -->
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm sticky-top" style="top: 100px;">
+                <div class="card-body text-center">
+                    <div class="author-avatar mb-4">
+                        <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 120px; height: 120px;">
+                            <i class="fas fa-user fa-3x text-white"></i>
+                        </div>
+                    </div>
+                    <h2 class="h4 brand-font">{{ author.full_name }}</h2>
+                    
+                    {% if author.DateOfBirth %}
+                    <div class="author-info mb-3">
+                        <p class="mb-1">
+                            <i class="fas fa-birthday-cake me-2 text-muted"></i>
+                            <strong>Born:</strong> {{ author.DateOfBirth|date:"F d, Y" }}
+                        </p>
+                        {% if author.DateOfDeath %}
+                        <p class="mb-0">
+                            <i class="fas fa-cross me-2 text-muted"></i>
+                            <strong>Died:</strong> {{ author.DateOfDeath|date:"F d, Y" }}
+                        </p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <div class="author-stats mb-4">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="stat-number text-primary fw-bold">{{ books|length }}</div>
+                                <div class="stat-label text-muted small">Books</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-number text-primary fw-bold">{{ author.book_set.count }}</div>
+                                <div class="stat-label text-muted small">Total Works</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <a href="#books" class="btn btn-primary-custom">
+                            <i class="fas fa-book me-1"></i>View All Books
+                        </a>
                     </div>
                 </div>
             </div>
-            {% empty %}
-            <div class="col-12">
-                <p>No books available by this author.</p>
+        </div>
+
+        <!-- Author Details and Books -->
+        <div class="col-lg-8">
+            <!-- Biography -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h3 class="card-title h5 mb-3">
+                        <i class="fas fa-user-circle me-2 text-primary"></i>Biography
+                    </h3>
+                    <p class="card-text">
+                        {{ author.Bio|default:"No biography available for this author. Check back later for updates." }}
+                    </p>
+                </div>
             </div>
-            {% endfor %}
+
+            <!-- Author's Books -->
+            <div class="card border-0 shadow-sm" id="books">
+                <div class="card-header bg-white">
+                    <h3 class="card-title h5 mb-0">
+                        <i class="fas fa-books me-2 text-primary"></i>Books by {{ author.first_name }}
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {% if books %}
+                    <div class="row">
+                        {% for book in books %}
+                        <div class="col-md-6 mb-4">
+                            <div class="book-card h-100">
+                                <div class="row g-0">
+                                    <div class="col-4">
+                                        <img src="{{ book.photo_url }}" class="img-fluid rounded-start h-100" alt="{{ book.Title }}" style="object-fit: cover; min-height: 150px;">
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="card-body d-flex flex-column h-100">
+                                            <h6 class="card-title">{{ book.Title|truncatewords:6 }}</h6>
+                                            <div class="mb-2">
+                                                <span class="badge bg-light text-dark border small">{{ book.GenreID.GenreName }}</span>
+                                            </div>
+                                            <div class="rating-stars small mb-2">
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star"></i>
+                                                <i class="fas fa-star-half-alt"></i>
+                                            </div>
+                                            <div class="mt-auto">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span class="price-tag small">${{ book.Price }}</span>
+                                                    <a href="{% url 'book_detail' book.BookID %}" class="btn btn-outline-primary btn-sm">View</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-book-open fa-2x text-muted mb-3"></i>
+                        <p class="text-muted">No books available by this author at the moment.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+<style>
+.author-info p {
+    margin-bottom: 0.5rem;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+}
+
+.sticky-top {
+    z-index: 1020;
+}
+</style>
 {% endblock %}
