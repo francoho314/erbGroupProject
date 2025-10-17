@@ -1,62 +1,158 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <h1>Welcome to Our Bookstore</h1>
-        <p class="lead">Discover your next favorite book!</p>
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4 brand-font">Discover Your Next Favorite Book</h1>
+                <p class="lead mb-4">Explore thousands of books across all genres. From bestsellers to hidden gems, find exactly what you're looking for.</p>
+                <div class="search-box">
+                    <form action="{% url 'book_list' %}" method="get" class="d-flex">
+                        <input type="text" name="query" class="form-control form-control-lg me-2" placeholder="Search books, authors, genres...">
+                        <button type="submit" class="btn btn-light btn-lg">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center">
+                <img src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" 
+                     alt="Book Collection" class="img-fluid rounded-3 shadow">
+            </div>
+        </div>
     </div>
-</div>
+</section>
 
-<div class="row mt-4">
-    <div class="col-md-12">
-        <h2>Featured Books</h2>
-        <div class="row">
-            {% for book in books %}
-            <div class="col-md-3 mb-4">
-                <div class="card h-100">
-                    <img src="{{ book.photo_url }}" class="card-img-top" alt="{{ book.Title }}" style="height: 300px; object-fit: cover;">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ book.Title }}</h5>
-                        <p class="card-text">{{ book.AuthorID.full_name }}</p>
-                        <p class="card-text"><strong>Price:</strong> ${{ book.Price }}</p>
-                        <p class="card-text">
+<!-- Featured Books -->
+<section class="container mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="section-title">Featured Books</h2>
+        <a href="{% url 'book_list' %}" class="btn btn-outline-primary">View All <i class="fas fa-arrow-right ms-1"></i></a>
+    </div>
+    <div class="row">
+        {% for book in books %}
+        <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+            <div class="book-card h-100">
+                {% if forloop.counter <= 2 %}
+                <span class="discount-badge">Bestseller</span>
+                {% endif %}
+                <img src="{{ book.photo_url }}" class="book-image w-100" alt="{{ book.Title }}">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ book.Title|truncatewords:6 }}</h5>
+                    <p class="text-muted mb-2">by {{ book.AuthorID.full_name }}</p>
+                    <div class="mb-2">
+                        <span class="genre-badge">{{ book.GenreID.GenreName }}</span>
+                    </div>
+                    <div class="rating-stars mb-2">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                        <small class="text-muted ms-1">(4.5)</small>
+                    </div>
+                    <div class="mt-auto">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="price-tag">${{ book.Price }}</span>
                             {% if book.is_available %}
                                 <span class="badge bg-success">In Stock</span>
                             {% else %}
-                                <span class="badge bg-danger">Out of Stock</span>
+                                <span class="badge bg-secondary">Out of Stock</span>
                             {% endif %}
-                        </p>
-                    </div>
-                    <div class="card-footer">
-                        <a href="{% url 'book_detail' book.BookID %}" class="btn btn-primary btn-sm">View Details</a>
-                        {% if book.is_available and user.is_authenticated %}
-                            <a href="{% url 'add_to_cart' book.BookID %}" class="btn btn-success btn-sm">Add to Cart</a>
-                        {% endif %}
+                        </div>
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'book_detail' book.BookID %}" class="btn btn-outline-primary">View Details</a>
+                            {% if book.is_available and user.is_authenticated %}
+                                <a href="{% url 'add_to_cart' book.BookID %}" class="btn btn-primary-custom">
+                                    <i class="fas fa-cart-plus me-1"></i>Add to Cart
+                                </a>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
-            {% empty %}
-            <div class="col-12">
-                <p>No books available at the moment.</p>
-            </div>
-            {% endfor %}
         </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">No books available at the moment.</h4>
+        </div>
+        {% endfor %}
     </div>
-</div>
+</section>
 
-<div class="row mt-4">
-    <div class="col-md-12">
-        <h2>Browse by Genre</h2>
+<!-- Features Section -->
+<section id="features" class="bg-light py-5">
+    <div class="container">
+        <h2 class="section-title text-center">Why Choose BookHub?</h2>
         <div class="row">
-            {% for genre in genres %}
-            <div class="col-md-2 mb-3">
-                <a href="{% url 'genre_books' genre.GenreID %}" class="btn btn-outline-primary w-100">
-                    {{ genre.GenreName }}
-                </a>
+            <div class="col-lg-3 col-md-6 text-center mb-4">
+                <div class="feature-icon">
+                    <i class="fas fa-shipping-fast"></i>
+                </div>
+                <h5>Free Shipping</h5>
+                <p class="text-muted">Free delivery on orders over $25. Fast and reliable shipping worldwide.</p>
             </div>
-            {% endfor %}
+            <div class="col-lg-3 col-md-6 text-center mb-4">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h5>Secure Payment</h5>
+                <p class="text-muted">Your payments are safe and secure with our encrypted checkout process.</p>
+            </div>
+            <div class="col-lg-3 col-md-6 text-center mb-4">
+                <div class="feature-icon">
+                    <i class="fas fa-undo-alt"></i>
+                </div>
+                <h5>Easy Returns</h5>
+                <p class="text-muted">30-day return policy. No questions asked if you're not satisfied.</p>
+            </div>
+            <div class="col-lg-3 col-md-6 text-center mb-4">
+                <div class="feature-icon">
+                    <i class="fas fa-headset"></i>
+                </div>
+                <h5>24/7 Support</h5>
+                <p class="text-muted">Our customer support team is here to help you anytime, anywhere.</p>
+            </div>
         </div>
     </div>
-</div>
+</section>
+
+<!-- Genres Section -->
+<section class="container py-5">
+    <h2 class="section-title text-center">Browse by Genre</h2>
+    <div class="row">
+        {% for genre in genres %}
+        <div class="col-lg-2 col-md-4 col-6 mb-3">
+            <a href="{% url 'genre_books' genre.GenreID %}" class="text-decoration-none">
+                <div class="card genre-card text-center h-100 border-0">
+                    <div class="card-body">
+                        <i class="fas fa-book fa-2x text-primary mb-3"></i>
+                        <h6 class="card-title">{{ genre.GenreName }}</h6>
+                        <small class="text-muted">Explore</small>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Newsletter Section -->
+<section class="bg-primary text-white py-5">
+    <div class="container">
+        <div class="row justify-content-center text-center">
+            <div class="col-lg-6">
+                <h3 class="brand-font mb-3">Stay Updated</h3>
+                <p class="mb-4">Subscribe to our newsletter and be the first to know about new releases and exclusive deals.</p>
+                <div class="input-group input-group-lg">
+                    <input type="email" class="form-control" placeholder="Enter your email">
+                    <button class="btn btn-light" type="button">Subscribe</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 {% endblock %}

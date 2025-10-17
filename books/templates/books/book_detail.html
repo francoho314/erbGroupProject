@@ -1,81 +1,287 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-4">
-        <div class="card">
-            <img src="{{ book.photo_url }}" class="card-img-top" alt="{{ book.Title }}" style="height: 400px; object-fit: cover;">
-        </div>
-    </div>
-    
-    <div class="col-md-8">
-        <h1>{{ book.Title }}</h1>
-        <p class="lead">by {{ book.AuthorID.full_name }}</p>
-        
-        <div class="card mb-4">
-            <div class="card-body">
-                <h5 class="card-title">Book Details</h5>
-                <p><strong>Genre:</strong> {{ book.GenreID.GenreName }}</p>
-                <p><strong>ISBN:</strong> {{ book.ISBN }}</p>
-                <p><strong>Publication Date:</strong> {{ book.PublicationDate }}</p>
-                <p><strong>Price:</strong> ${{ book.Price }}</p>
-                <p><strong>Stock:</strong> 
-                    {% if book.is_available %}
-                        <span class="badge bg-success">{{ book.Stock }} available</span>
-                    {% else %}
-                        <span class="badge bg-danger">Out of Stock</span>
-                    {% endif %}
-                </p>
-                
-                {% if book.is_available and user.is_authenticated %}
-                    <a href="{% url 'add_to_cart' book.BookID %}" class="btn btn-success btn-lg">Add to Cart</a>
-                {% elif not user.is_authenticated %}
-                    <a href="{% url 'login' %}?next={% url 'book_detail' book.BookID %}" class="btn btn-primary btn-lg">Login to Purchase</a>
-                {% endif %}
+<div class="container mt-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'book_list' %}">Books</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'genre_books' book.GenreID.GenreID %}">{{ book.GenreID.GenreName }}</a></li>
+            <li class="breadcrumb-item active">{{ book.Title|truncatewords:4 }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Book Image -->
+        <div class="col-lg-5 mb-4">
+            <div class="card border-0 shadow-sm">
+                <img src="{{ book.photo_url }}" class="card-img-top" alt="{{ book.Title }}" style="max-height: 500px; object-fit: cover;">
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">About the Author</h5>
-                <p>{{ book.AuthorID.Bio|default:"No biography available." }}</p>
-                <a href="{% url 'author_detail' book.AuthorID.AuthorID %}" class="btn btn-outline-primary">
-                    View Author Details
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
+        <!-- Book Details -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <span class="badge bg-primary mb-2">{{ book.GenreID.GenreName }}</span>
+                    <h1 class="h2 brand-font mb-3">{{ book.Title }}</h1>
+                    <p class="lead mb-3">by 
+                        <a href="{% url 'author_detail' book.AuthorID.AuthorID %}" class="text-decoration-none">
+                            {{ book.AuthorID.full_name }}
+                        </a>
+                    </p>
 
-<div class="row mt-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header">
-                <h5>Customer Reviews</h5>
-            </div>
-            <div class="card-body">
-                {% if user.is_authenticated %}
-                    <h6>Write a Review</h6>
-                    <form method="post">
-                        {% csrf_token %}
-                        {{ review_form.as_p }}
-                        <button type="submit" class="btn btn-primary btn-sm">Submit Review</button>
-                    </form>
-                    <hr>
-                {% endif %}
-                
-                {% for review in reviews %}
-                    <div class="mb-3">
-                        <strong>{{ review.CustomerID }}</strong>
-                        <span class="badge bg-warning">{{ review.Rating }}/5</span>
-                        <small class="text-muted">{{ review.ReviewDate|date:"M d, Y" }}</small>
-                        <p>{{ review.ReviewText }}</p>
+                    <!-- Rating -->
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rating-stars me-2">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                        </div>
+                        <span class="text-muted">(4.5 • 128 reviews)</span>
                     </div>
-                {% empty %}
-                    <p>No reviews yet. Be the first to review!</p>
+
+                    <!-- Price & Stock -->
+                    <div class="d-flex align-items-center mb-4">
+                        <h3 class="text-primary me-3 mb-0">${{ book.Price }}</h3>
+                        {% if book.is_available %}
+                            <span class="badge bg-success fs-6">
+                                <i class="fas fa-check me-1"></i>In Stock ({{ book.Stock }} available)
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary fs-6">Out of Stock</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2 d-md-flex mb-4">
+                        {% if book.is_available and user.is_authenticated %}
+                            <a href="{% url 'add_to_cart' book.BookID %}" class="btn btn-primary-custom btn-lg flex-fill me-md-2">
+                                <i class="fas fa-cart-plus me-2"></i>Add to Cart
+                            </a>
+                        {% elif not user.is_authenticated %}
+                            <a href="{% url 'login' %}?next={% url 'book_detail' book.BookID %}" class="btn btn-primary-custom btn-lg flex-fill">
+                                <i class="fas fa-sign-in-alt me-2"></i>Login to Purchase
+                            </a>
+                        {% endif %}
+                        <button class="btn btn-outline-secondary btn-lg">
+                            <i class="far fa-heart"></i>
+                        </button>
+                    </div>
+
+                    <!-- Book Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>ISBN:</strong></td>
+                                    <td>{{ book.ISBN }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Publication Date:</strong></td>
+                                    <td>{{ book.PublicationDate }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Pages:</strong></td>
+                                    <td>320</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Publisher:</strong></td>
+                                    <td>Penguin Books</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Language:</strong></td>
+                                    <td>English</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Format:</strong></td>
+                                    <td>Hardcover</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Quick Features -->
+                    <div class="bg-light rounded p-3">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <i class="fas fa-shipping-fast text-primary mb-2"></i>
+                                <small class="d-block">Free Shipping</small>
+                            </div>
+                            <div class="col-4">
+                                <i class="fas fa-undo-alt text-primary mb-2"></i>
+                                <small class="d-block">30-Day Returns</small>
+                            </div>
+                            <div class="col-4">
+                                <i class="fas fa-shield-alt text-primary mb-2"></i>
+                                <small class="d-block">Secure Checkout</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Information Tabs -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <ul class="nav nav-tabs" id="bookTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="description-tab" data-bs-toggle="tab" data-bs-target="#description" type="button" role="tab">
+                                Description
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="author-tab" data-bs-toggle="tab" data-bs-target="#author" type="button" role="tab">
+                                About Author
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab">
+                                Reviews ({{ reviews|length }})
+                            </button>
+                        </li>
+                    </ul>
+                    <div class="tab-content p-3" id="bookTabsContent">
+                        <div class="tab-pane fade show active" id="description" role="tabpanel">
+                            <p class="lead">A captivating story that will keep you turning pages until the very end.</p>
+                            <p>{{ book.AuthorID.Bio|default:"This book offers a compelling narrative that explores deep themes and complex characters. Perfect for readers who enjoy thought-provoking literature that stays with you long after you've finished reading." }}</p>
+                        </div>
+                        <div class="tab-pane fade" id="author" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-2 text-center">
+                                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                        <i class="fas fa-user fa-2x"></i>
+                                    </div>
+                                </div>
+                                <div class="col-md-10">
+                                    <h4>{{ book.AuthorID.full_name }}</h4>
+                                    <p>{{ book.AuthorID.Bio|default:"An accomplished author with multiple published works. Known for engaging storytelling and memorable characters." }}</p>
+                                    <a href="{% url 'author_detail' book.AuthorID.AuthorID %}" class="btn btn-outline-primary">
+                                        View All Books by {{ book.AuthorID.first_name }}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="reviews" role="tabpanel">
+                            {% if user.is_authenticated %}
+                            <div class="card mb-4">
+                                <div class="card-body">
+                                    <h5>Write a Review</h5>
+                                    <form method="post">
+                                        {% csrf_token %}
+                                        <div class="mb-3">
+                                            <label class="form-label">Rating</label>
+                                            <div class="rating-stars fs-4">
+                                                <i class="far fa-star" data-rating="1"></i>
+                                                <i class="far fa-star" data-rating="2"></i>
+                                                <i class="far fa-star" data-rating="3"></i>
+                                                <i class="far fa-star" data-rating="4"></i>
+                                                <i class="far fa-star" data-rating="5"></i>
+                                            </div>
+                                            <input type="hidden" name="Rating" id="rating-value" value="5">
+                                        </div>
+                                        <div class="mb-3">
+                                            {{ review_form.ReviewText }}
+                                        </div>
+                                        <button type="submit" class="btn btn-primary-custom">Submit Review</button>
+                                    </form>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <div class="reviews-list">
+                                {% for review in reviews %}
+                                <div class="review-item mb-4 pb-4 border-bottom">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <strong>{{ review.CustomerID }}</strong>
+                                            <div class="rating-stars small">
+                                                {% for i in "12345" %}
+                                                    {% if forloop.counter <= review.Rating %}
+                                                        <i class="fas fa-star"></i>
+                                                    {% else %}
+                                                        <i class="far fa-star"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">{{ review.ReviewDate|date:"M d, Y" }}</small>
+                                    </div>
+                                    <p class="mb-0">{{ review.ReviewText }}</p>
+                                </div>
+                                {% empty %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-comments fa-2x text-muted mb-3"></i>
+                                    <p class="text-muted">No reviews yet. Be the first to review this book!</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Books -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3 class="section-title">Related Books</h3>
+            <div class="row">
+                {% for related_book in book.GenreID.book_set.all|slice:":4" %}
+                    {% if related_book.BookID != book.BookID %}
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="book-card h-100">
+                            <img src="{{ related_book.photo_url }}" class="book-image w-100" alt="{{ related_book.Title }}">
+                            <div class="card-body">
+                                <h6 class="card-title">{{ related_book.Title|truncatewords:4 }}</h6>
+                                <p class="text-muted small">by {{ related_book.AuthorID.full_name }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="price-tag">${{ related_book.Price }}</span>
+                                    <a href="{% url 'book_detail' related_book.BookID %}" class="btn btn-outline-primary btn-sm">View</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
                 {% endfor %}
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    // Star rating interaction
+    document.addEventListener('DOMContentLoaded', function() {
+        const stars = document.querySelectorAll('.rating-stars .fa-star');
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                const rating = this.getAttribute('data-rating');
+                document.getElementById('rating-value').value = rating;
+                
+                // Update star display
+                stars.forEach((s, index) => {
+                    if (index < rating) {
+                        s.classList.remove('far');
+                        s.classList.add('fas');
+                    } else {
+                        s.classList.remove('fas');
+                        s.classList.add('far');
+                    }
+                });
+            });
+        });
+    });
+</script>
 {% endblock %}

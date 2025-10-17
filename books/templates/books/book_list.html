@@ -1,54 +1,182 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-3">
-        <div class="card">
-            <div class="card-header">
-                <h5>Filter Books</h5>
-            </div>
-            <div class="card-body">
-                <form method="get">
-                    {{ form.as_p }}
-                    <button type="submit" class="btn btn-primary">Search</button>
-                    <a href="{% url 'book_list' %}" class="btn btn-secondary">Clear</a>
-                </form>
+<div class="container mt-4">
+    <!-- Page Header -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                    <li class="breadcrumb-item active">Browse Books</li>
+                </ol>
+            </nav>
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="section-title">Browse Our Collection</h1>
+                <span class="badge bg-primary fs-6">{{ books|length }} books found</span>
             </div>
         </div>
     </div>
-    <div class="col-md-9">
-        <h2>All Books</h2>
-        <div class="row">
-            {% for book in books %}
-            <div class="col-md-4 mb-4">
-                <div class="card h-100">
-                    <img src="{{ book.photo_url }}" class="card-img-top" alt="{{ book.Title }}" style="height: 250px; object-fit: cover;">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ book.Title }}</h5>
-                        <p class="card-text">{{ book.AuthorID.full_name }}</p>
-                        <p class="card-text"><strong>Genre:</strong> {{ book.GenreID.GenreName }}</p>
-                        <p class="card-text"><strong>Price:</strong> ${{ book.Price }}</p>
-                        <p class="card-text">
-                            {% if book.is_available %}
-                                <span class="badge bg-success">In Stock</span>
-                            {% else %}
-                                <span class="badge bg-danger">Out of Stock</span>
-                            {% endif %}
-                        </p>
+
+    <div class="row">
+        <!-- Sidebar Filters -->
+        <div class="col-lg-3 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filters</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Search</label>
+                            <input type="text" name="query" class="form-control" placeholder="Title, author..." value="{{ request.GET.query }}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Genre</label>
+                            <select name="genre" class="form-select">
+                                <option value="">All Genres</option>
+                                {% for genre in form.genre.field.queryset %}
+                                    <option value="{{ genre.GenreID }}" {% if request.GET.genre == genre.GenreID|stringformat:"s" %}selected{% endif %}>
+                                        {{ genre.GenreName }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Author</label>
+                            <select name="author" class="form-select">
+                                <option value="">All Authors</option>
+                                {% for author in form.author.field.queryset %}
+                                    <option value="{{ author.AuthorID }}" {% if request.GET.author == author.AuthorID|stringformat:"s" %}selected{% endif %}>
+                                        {{ author.full_name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary-custom">
+                                <i class="fas fa-search me-1"></i>Apply Filters
+                            </button>
+                            <a href="{% url 'book_list' %}" class="btn btn-outline-secondary">Clear All</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body">
+                    <h6 class="card-title">Collection Stats</h6>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Total Books:</span>
+                        <strong>{{ books.paginator.count }}</strong>
                     </div>
-                    <div class="card-footer">
-                        <a href="{% url 'book_detail' book.BookID %}" class="btn btn-primary btn-sm">View Details</a>
-                        {% if book.is_available and user.is_authenticated %}
-                            <a href="{% url 'add_to_cart' book.BookID %}" class="btn btn-success btn-sm">Add to Cart</a>
-                        {% endif %}
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">In Stock:</span>
+                        <strong>{{ books|length }}</strong>
                     </div>
                 </div>
             </div>
-            {% empty %}
-            <div class="col-12">
-                <p>No books found.</p>
+        </div>
+
+        <!-- Books Grid -->
+        <div class="col-lg-9">
+            <!-- Sort Options -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <span class="text-muted">Showing {{ books|length }} results</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <span class="me-2 text-muted">Sort by:</span>
+                    <select class="form-select form-select-sm" style="width: auto;">
+                        <option>Featured</option>
+                        <option>Price: Low to High</option>
+                        <option>Price: High to Low</option>
+                        <option>Newest First</option>
+                    </select>
+                </div>
             </div>
-            {% endfor %}
+
+            <!-- Books Grid -->
+            <div class="row">
+                {% for book in books %}
+                <div class="col-xl-4 col-lg-6 mb-4">
+                    <div class="book-card h-100">
+                        <div class="position-relative">
+                            <img src="{{ book.photo_url }}" class="book-image w-100" alt="{{ book.Title }}">
+                            {% if forloop.counter <= 3 %}
+                            <span class="discount-badge">Popular</span>
+                            {% endif %}
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <h6 class="card-title">{{ book.Title }}</h6>
+                            <p class="text-muted small mb-2">by {{ book.AuthorID.full_name }}</p>
+                            <div class="mb-2">
+                                <span class="badge bg-light text-dark border">{{ book.GenreID.GenreName }}</span>
+                            </div>
+                            <div class="rating-stars small mb-2">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star-half-alt"></i>
+                                <small class="text-muted ms-1">(128)</small>
+                            </div>
+                            <div class="mt-auto">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="price-tag">${{ book.Price }}</span>
+                                    {% if book.is_available %}
+                                        <span class="badge bg-success">In Stock</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Out of Stock</span>
+                                    {% endif %}
+                                </div>
+                                <div class="d-grid gap-2">
+                                    <a href="{% url 'book_detail' book.BookID %}" class="btn btn-outline-primary btn-sm">View Details</a>
+                                    {% if book.is_available and user.is_authenticated %}
+                                        <a href="{% url 'add_to_cart' book.BookID %}" class="btn btn-primary-custom btn-sm">
+                                            <i class="fas fa-cart-plus me-1"></i>Add to Cart
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-5">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No books found</h4>
+                    <p class="text-muted">Try adjusting your search filters</p>
+                    <a href="{% url 'book_list' %}" class="btn btn-primary-custom">Clear Filters</a>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if books.has_other_pages %}
+            <nav aria-label="Page navigation" class="mt-5">
+                <ul class="pagination justify-content-center">
+                    {% if books.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ books.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Previous</a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for i in books.paginator.page_range %}
+                    <li class="page-item {% if books.number == i %}active{% endif %}">
+                        <a class="page-link" href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ i }}</a>
+                    </li>
+                    {% endfor %}
+                    
+                    {% if books.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ books.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
         </div>
     </div>
 </div>
