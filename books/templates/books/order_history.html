@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Order History - BookStore{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1>Order History</h1>
+        <p class="lead">View your past orders and their details.</p>
+
+        {% if orders %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Date</th>
+                        <th>Items</th>
+                        <th>Total Amount</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>
+                            <strong>#{{ order.OrderID }}</strong>
+                        </td>
+                        <td>{{ order.OrderDate|date:"M d, Y H:i" }}</td>
+                        <td>
+                            {{ order.orderitems.count }} item{{ order.orderitems.count|pluralize }}
+                        </td>
+                        <td>${{ order.TotalAmount }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if order.OrderStatus == 'delivered' %}bg-success
+                                {% elif order.OrderStatus == 'processing' %}bg-primary
+                                {% elif order.OrderStatus == 'shipped' %}bg-info
+                                {% elif order.OrderStatus == 'cancelled' %}bg-danger
+                                {% else %}bg-warning{% endif %}">
+                                {{ order.OrderStatus|title }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{% url 'order_detail' order.OrderID %}" 
+                               class="btn btn-primary btn-sm">
+                                View Details
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if orders|length > 10 %}
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <div>
+                <p class="text-muted">
+                    Showing {{ orders|length }} order{{ orders|length|pluralize }}
+                </p>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% else %}
+        <div class="alert alert-info text-center">
+            <h4>No Orders Yet</h4>
+            <p>You haven't placed any orders yet. Start shopping to see your order history here!</p>
+            <a href="{% url 'book_list' %}" class="btn btn-primary">Start Shopping</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

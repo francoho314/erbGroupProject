@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Books in {{ genre.GenreName }}</h1>
+<div class="row">
+    {% for book in books %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <img src="{{ book.photo_url }}" class="card-img-top" alt="{{ book.Title }}" style="height: 250px; object-fit: cover;">
+            <div class="card-body">
+                <h5 class="card-title">{{ book.Title }}</h5>
+                <p class="card-text">{{ book.AuthorID.full_name }}</p>
+                <p class="card-text">${{ book.Price }}</p>
+                <p class="card-text">
+                    {% if book.is_available %}
+                        <span class="badge bg-success">In Stock</span>
+                    {% else %}
+                        <span class="badge bg-danger">Out of Stock</span>
+                    {% endif %}
+                </p>
+            </div>
+            <div class="card-footer">
+                <a href="{% url 'book_detail' book.BookID %}" class="btn btn-primary btn-sm">View Details</a>
+                {% if book.is_available and user.is_authenticated %}
+                    <a href="{% url 'add_to_cart' book.BookID %}" class="btn btn-success btn-sm">Add to Cart</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <p>No books found in this genre.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

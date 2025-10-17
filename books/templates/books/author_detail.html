@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h2>{{ author.full_name }}</h2>
+                {% if author.DateOfBirth %}
+                    <p><strong>Born:</strong> {{ author.DateOfBirth|date:"F d, Y" }}</p>
+                {% endif %}
+                {% if author.DateOfDeath %}
+                    <p><strong>Died:</strong> {{ author.DateOfDeath|date:"F d, Y" }}</p>
+                {% endif %}
+                {% if author.Bio %}
+                    <p>{{ author.Bio }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <h3>Books by {{ author.full_name }}</h3>
+        <div class="row">
+            {% for book in books %}
+            <div class="col-md-6 mb-3">
+                <div class="card h-100">
+                    <img src="{{ book.photo_url }}" class="card-img-top" alt="{{ book.Title }}" style="height: 200px; object-fit: cover;">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ book.Title }}</h5>
+                        <p class="card-text">{{ book.GenreID.GenreName }}</p>
+                        <p class="card-text">${{ book.Price }}</p>
+                        <a href="{% url 'book_detail' book.BookID %}" class="btn btn-primary btn-sm">View Details</a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <p>No books available by this author.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

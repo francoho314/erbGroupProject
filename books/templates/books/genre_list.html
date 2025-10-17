@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Genres</h1>
+<div class="row">
+    {% for genre in genres %}
+    <div class="col-md-3 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">{{ genre.GenreName }}</h5>
+                <a href="{% url 'genre_books' genre.GenreID %}" class="btn btn-primary">Browse Books</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <p>No genres found.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

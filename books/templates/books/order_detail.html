@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Order #{{ order.OrderID }} - BookStore{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'order_history' %}">Order History</a></li>
+                <li class="breadcrumb-item active">Order #{{ order.OrderID }}</li>
+            </ol>
+        </nav>
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Order #{{ order.OrderID }}</h1>
+            <span class="badge 
+                {% if order.OrderStatus == 'delivered' %}bg-success
+                {% elif order.OrderStatus == 'processing' %}bg-primary
+                {% elif order.OrderStatus == 'shipped' %}bg-info
+                {% elif order.OrderStatus == 'cancelled' %}bg-danger
+                {% else %}bg-warning{% endif %} fs-6">
+                {{ order.OrderStatus|title }}
+            </span>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Order Items</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Book</th>
+                                        <th>Price</th>
+                                        <th>Quantity</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in order_items %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img src="{{ item.BookID.photo_url }}" 
+                                                     alt="{{ item.BookID.Title }}" 
+                                                     class="me-3" 
+                                                     style="width: 50px; height: 70px; object-fit: cover;">
+                                                <div>
+                                                    <strong>{{ item.BookID.Title }}</strong><br>
+                                                    <small class="text-muted">by {{ item.BookID.AuthorID.full_name }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>${{ item.UnitPrice }}</td>
+                                        <td>{{ item.Quantity }}</td>
+                                        <td>${{ item.TotalPrice }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-center">No items in this order.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="3" class="text-end"><strong>Total Amount:</strong></td>
+                                        <td><strong>${{ order.TotalAmount }}</strong></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Order Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Order Date:</strong><br>
+                        {{ order.OrderDate|date:"F d, Y H:i" }}</p>
+                        
+                        <p><strong>Customer:</strong><br>
+                        {{ order.CustomerID.get_full_name }}</p>
+                        
+                        <p><strong>Email:</strong><br>
+                        {{ order.CustomerID.Email }}</p>
+                        
+                        <p><strong>Shipping Address:</strong><br>
+                        {{ order.CustomerID.Address }}<br>
+                        {{ order.CustomerID.City }}, {{ order.CustomerID.State }} {{ order.CustomerID.ZipCode }}</p>
+                        
+                        <p><strong>Order Status:</strong><br>
+                        <span class="badge 
+                            {% if order.OrderStatus == 'delivered' %}bg-success
+                            {% elif order.OrderStatus == 'processing' %}bg-primary
+                            {% elif order.OrderStatus == 'shipped' %}bg-info
+                            {% elif order.OrderStatus == 'cancelled' %}bg-danger
+                            {% else %}bg-warning{% endif %}">
+                            {{ order.OrderStatus|title }}
+                        </span>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="card mt-3">
+                    <div class="card-body text-center">
+                        <a href="{% url 'order_history' %}" class="btn btn-secondary">
+                            ← Back to Order History
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

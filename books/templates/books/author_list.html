@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Authors</h1>
+<div class="row">
+    {% for author in authors %}
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ author.full_name }}</h5>
+                {% if author.DateOfBirth %}
+                    <p class="card-text">
+                        <strong>Born:</strong> {{ author.DateOfBirth|date:"F d, Y" }}
+                    </p>
+                {% endif %}
+                {% if author.Bio %}
+                    <p class="card-text">{{ author.Bio|truncatewords:30 }}</p>
+                {% endif %}
+                <a href="{% url 'author_detail' author.AuthorID %}" class="btn btn-primary">View Author</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <p>No authors found.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

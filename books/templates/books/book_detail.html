@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <img src="{{ book.photo_url }}" class="card-img-top" alt="{{ book.Title }}" style="height: 400px; object-fit: cover;">
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <h1>{{ book.Title }}</h1>
+        <p class="lead">by {{ book.AuthorID.full_name }}</p>
+        
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Book Details</h5>
+                <p><strong>Genre:</strong> {{ book.GenreID.GenreName }}</p>
+                <p><strong>ISBN:</strong> {{ book.ISBN }}</p>
+                <p><strong>Publication Date:</strong> {{ book.PublicationDate }}</p>
+                <p><strong>Price:</strong> ${{ book.Price }}</p>
+                <p><strong>Stock:</strong> 
+                    {% if book.is_available %}
+                        <span class="badge bg-success">{{ book.Stock }} available</span>
+                    {% else %}
+                        <span class="badge bg-danger">Out of Stock</span>
+                    {% endif %}
+                </p>
+                
+                {% if book.is_available and user.is_authenticated %}
+                    <a href="{% url 'add_to_cart' book.BookID %}" class="btn btn-success btn-lg">Add to Cart</a>
+                {% elif not user.is_authenticated %}
+                    <a href="{% url 'login' %}?next={% url 'book_detail' book.BookID %}" class="btn btn-primary btn-lg">Login to Purchase</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">About the Author</h5>
+                <p>{{ book.AuthorID.Bio|default:"No biography available." }}</p>
+                <a href="{% url 'author_detail' book.AuthorID.AuthorID %}" class="btn btn-outline-primary">
+                    View Author Details
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Customer Reviews</h5>
+            </div>
+            <div class="card-body">
+                {% if user.is_authenticated %}
+                    <h6>Write a Review</h6>
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ review_form.as_p }}
+                        <button type="submit" class="btn btn-primary btn-sm">Submit Review</button>
+                    </form>
+                    <hr>
+                {% endif %}
+                
+                {% for review in reviews %}
+                    <div class="mb-3">
+                        <strong>{{ review.CustomerID }}</strong>
+                        <span class="badge bg-warning">{{ review.Rating }}/5</span>
+                        <small class="text-muted">{{ review.ReviewDate|date:"M d, Y" }}</small>
+                        <p>{{ review.ReviewText }}</p>
+                    </div>
+                {% empty %}
+                    <p>No reviews yet. Be the first to review!</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
