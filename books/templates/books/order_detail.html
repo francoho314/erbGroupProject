@@ -1,125 +1,356 @@
 {% extends 'base.html' %}
 
-{% block title %}Order #{{ order.OrderID }} - BookStore{% endblock %}
+{% block title %}Order #{{ order.OrderID }} - BookHub{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
-                <li class="breadcrumb-item"><a href="{% url 'order_history' %}">Order History</a></li>
-                <li class="breadcrumb-item active">Order #{{ order.OrderID }}</li>
-            </ol>
-        </nav>
-        
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>Order #{{ order.OrderID }}</h1>
-            <span class="badge 
-                {% if order.OrderStatus == 'delivered' %}bg-success
-                {% elif order.OrderStatus == 'processing' %}bg-primary
-                {% elif order.OrderStatus == 'shipped' %}bg-info
-                {% elif order.OrderStatus == 'cancelled' %}bg-danger
-                {% else %}bg-warning{% endif %} fs-6">
-                {{ order.OrderStatus|title }}
-            </span>
+<div class="container mt-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'order_history' %}">Order History</a></li>
+            <li class="breadcrumb-item active">Order #{{ order.OrderID }}</li>
+        </ol>
+    </nav>
+
+    <!-- Order Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="section-title mb-2">Order #{{ order.OrderID }}</h1>
+                    <p class="text-muted mb-0">Placed on {{ order.OrderDate|date:"F d, Y" }}</p>
+                </div>
+                <span class="badge 
+                    {% if order.OrderStatus == 'delivered' %}bg-success
+                    {% elif order.OrderStatus == 'processing' %}bg-primary
+                    {% elif order.OrderStatus == 'shipped' %}bg-info
+                    {% elif order.OrderStatus == 'cancelled' %}bg-danger
+                    {% else %}bg-warning{% endif %} fs-6">
+                    <i class="fas 
+                        {% if order.OrderStatus == 'delivered' %}fa-check-circle
+                        {% elif order.OrderStatus == 'processing' %}fa-cog
+                        {% elif order.OrderStatus == 'shipped' %}fa-shipping-fast
+                        {% elif order.OrderStatus == 'cancelled' %}fa-times-circle
+                        {% else %}fa-clock{% endif %} me-1">
+                    </i>
+                    {{ order.OrderStatus|title }}
+                </span>
+            </div>
         </div>
-        
-        <div class="row">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Order Items</h5>
+    </div>
+
+    <div class="row">
+        <!-- Order Items -->
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-box-open me-2 text-primary"></i>
+                        Order Items ({{ order_items|length }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for item in order_items %}
+                    <div class="order-item border-bottom pb-3 mb-3 {% if forloop.last %}border-bottom-0 mb-0 pb-0{% endif %}">
+                        <div class="row align-items-center">
+                            <div class="col-md-2">
+                                <img src="{{ item.BookID.photo_url }}" 
+                                     alt="{{ item.BookID.Title }}" 
+                                     class="img-fluid rounded" 
+                                     style="width: 80px; height: 100px; object-fit: cover;">
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="mb-1">{{ item.BookID.Title }}</h6>
+                                <p class="text-muted small mb-1">by {{ item.BookID.AuthorID.full_name }}</p>
+                                <span class="badge bg-light text-dark border">{{ item.BookID.GenreID.GenreName }}</span>
+                            </div>
+                            <div class="col-md-2 text-center">
+                                <small class="text-muted">Quantity</small>
+                                <div class="fw-semibold">{{ item.Quantity }}</div>
+                            </div>
+                            <div class="col-md-2 text-end">
+                                <small class="text-muted">Price</small>
+                                <div class="fw-bold text-primary">${{ item.TotalPrice }}</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Book</th>
-                                        <th>Price</th>
-                                        <th>Quantity</th>
-                                        <th>Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for item in order_items %}
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <img src="{{ item.BookID.photo_url }}" 
-                                                     alt="{{ item.BookID.Title }}" 
-                                                     class="me-3" 
-                                                     style="width: 50px; height: 70px; object-fit: cover;">
-                                                <div>
-                                                    <strong>{{ item.BookID.Title }}</strong><br>
-                                                    <small class="text-muted">by {{ item.BookID.AuthorID.full_name }}</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>${{ item.UnitPrice }}</td>
-                                        <td>{{ item.Quantity }}</td>
-                                        <td>${{ item.TotalPrice }}</td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="4" class="text-center">No items in this order.</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td colspan="3" class="text-end"><strong>Total Amount:</strong></td>
-                                        <td><strong>${{ order.TotalAmount }}</strong></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Order Timeline -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-map-marker-alt me-2 text-primary"></i>
+                        Order Status Timeline
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="steps">
+                        <!-- Step 1: Order Placed - Always active for existing orders -->
+                        <div class="step completed">
+                            <div class="step-icon">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                            <div class="step-label">
+                                <strong>Order Placed</strong>
+                                <small>{{ order.OrderDate|date:"M d, Y" }}</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Step 2: Processing -->
+                        <div class="step {% if order.OrderStatus == 'processing' or order.OrderStatus == 'shipped' or order.OrderStatus == 'delivered' %}completed{% endif %} 
+                                    {% if order.OrderStatus == 'processing' %}active{% endif %}">
+                            <div class="step-icon">
+                                <i class="fas fa-cog"></i>
+                            </div>
+                            <div class="step-label">
+                                <strong>Processing</strong>
+                                <small>Preparing your order</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Step 3: Shipped -->
+                        <div class="step {% if order.OrderStatus == 'shipped' or order.OrderStatus == 'delivered' %}completed{% endif %} 
+                                    {% if order.OrderStatus == 'shipped' %}active{% endif %}">
+                            <div class="step-icon">
+                                <i class="fas fa-shipping-fast"></i>
+                            </div>
+                            <div class="step-label">
+                                <strong>Shipped</strong>
+                                <small>On its way to you</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Step 4: Delivered -->
+                        <div class="step {% if order.OrderStatus == 'delivered' %}completed active{% endif %}">
+                            <div class="step-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="step-label">
+                                <strong>Delivered</strong>
+                                <small>Order completed</small>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Order Information</h5>
-                    </div>
-                    <div class="card-body">
-                        <p><strong>Order Date:</strong><br>
-                        {{ order.OrderDate|date:"F d, Y H:i" }}</p>
-                        
-                        <p><strong>Customer:</strong><br>
-                        {{ order.CustomerID.get_full_name }}</p>
-                        
-                        <p><strong>Email:</strong><br>
-                        {{ order.CustomerID.Email }}</p>
-                        
-                        <p><strong>Shipping Address:</strong><br>
-                        {{ order.CustomerID.Address }}<br>
-                        {{ order.CustomerID.City }}, {{ order.CustomerID.State }} {{ order.CustomerID.ZipCode }}</p>
-                        
-                        <p><strong>Order Status:</strong><br>
-                        <span class="badge 
-                            {% if order.OrderStatus == 'delivered' %}bg-success
-                            {% elif order.OrderStatus == 'processing' %}bg-primary
-                            {% elif order.OrderStatus == 'shipped' %}bg-info
-                            {% elif order.OrderStatus == 'cancelled' %}bg-danger
-                            {% else %}bg-warning{% endif %}">
-                            {{ order.OrderStatus|title }}
-                        </span>
-                        </p>
-                    </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm sticky-top" style="top: 100px;">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-receipt me-2 text-primary"></i>
+                        Order Summary
+                    </h5>
                 </div>
-                
-                <div class="card mt-3">
-                    <div class="card-body text-center">
-                        <a href="{% url 'order_history' %}" class="btn btn-secondary">
-                            ← Back to Order History
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Subtotal</span>
+                        <span class="fw-semibold">${{ order.TotalAmount }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Shipping</span>
+                        <span class="fw-semibold text-success">FREE</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Tax</span>
+                        <span class="fw-semibold">$2.50</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-4">
+                        <span class="fw-bold">Total</span>
+                        <span class="fw-bold fs-5 text-primary">${{ order.TotalAmount|add:2.5 }}</span>
+                    </div>
+
+                    <!-- Customer Information -->
+                    <div class="customer-info">
+                        <h6 class="mb-3">
+                            <i class="fas fa-user me-2 text-primary"></i>
+                            Customer Information
+                        </h6>
+                        <div class="mb-2">
+                            <small class="text-muted">Name</small>
+                            <div class="fw-semibold">{{ order.CustomerID.get_full_name }}</div>
+                        </div>
+                        <div class="mb-2">
+                            <small class="text-muted">Email</small>
+                            <div class="fw-semibold">{{ order.CustomerID.Email }}</div>
+                        </div>
+                        <div class="mb-2">
+                            <small class="text-muted">Phone</small>
+                            <div class="fw-semibold">{{ order.CustomerID.Phone|default:"Not provided" }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Shipping Address -->
+                    <div class="shipping-address mt-4">
+                        <h6 class="mb-3">
+                            <i class="fas fa-map-marker-alt me-2 text-primary"></i>
+                            Shipping Address
+                        </h6>
+                        <address class="text-muted small">
+                            {{ order.CustomerID.Address }}<br>
+                            {{ order.CustomerID.City }}, {{ order.CustomerID.State }} {{ order.CustomerID.ZipCode }}
+                        </address>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2 mt-4">
+                        <a href="{% url 'order_history' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Orders
                         </a>
+                        <button class="btn btn-outline-secondary" onclick="window.print()">
+                            <i class="fas fa-print me-2"></i>Print Invoice
+                        </button>
+                        
+                        <!-- Cancel Order Button - Only show for cancellable orders -->
+                        {% if order.OrderStatus == 'processing' %}
+                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
+                            <i class="fas fa-times me-2"></i>Cancel Order
+                        </button>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Cancel Order Confirmation Modal -->
+<div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelOrderModalLabel">
+                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                    Confirm Order Cancellation
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to cancel order <strong>#{{ order.OrderID }}</strong>?</p>
+                <p class="text-muted small">
+                    <i class="fas fa-info-circle me-1"></i>
+                    This action cannot be undone. The items will be returned to stock.
+                </p>
+                
+                <div class="alert alert-warning mt-3">
+                    <h6 class="alert-heading mb-2">
+                        <i class="fas fa-shopping-bag me-1"></i>
+                        Order Items:
+                    </h6>
+                    <ul class="mb-0 small">
+                        {% for item in order_items %}
+                        <li>{{ item.Quantity }} × {{ item.BookID.Title }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Keep Order
+                </button>
+                <form method="post" action="{% url 'cancel_order' order.OrderID %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>Yes, Cancel Order
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.steps {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    margin: 20px 0;
+}
+
+.steps::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #dee2e6;
+    z-index: 1;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+    flex: 1;
+}
+
+.step-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    color: #6c757d;
+    transition: all 0.3s ease;
+}
+
+.step.active .step-icon {
+    background: var(--primary-color);
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 0 0 3px rgba(44, 85, 48, 0.2);
+}
+
+.step.completed .step-icon {
+    background: var(--secondary-color);
+    color: white;
+}
+
+.step-label {
+    text-align: center;
+    font-size: 0.8rem;
+}
+
+.step-label strong {
+    display: block;
+    margin-bottom: 2px;
+}
+
+.sticky-top {
+    z-index: 1020;
+}
+
+.order-item:last-child {
+    border-bottom: none !important;
+}
+
+/* Connector lines between steps */
+.step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    width: 100%;
+    height: 2px;
+    background: #dee2e6;
+    z-index: -1;
+}
+
+.step.completed:not(:last-child)::after {
+    background: var(--secondary-color);
+}
+</style>
 {% endblock %}

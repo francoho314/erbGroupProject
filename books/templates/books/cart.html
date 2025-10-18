@@ -1,60 +1,208 @@
 {% extends 'base.html' %}
 
+{% block title %}Shopping Cart - BookHub{% endblock %}
+
 {% block content %}
-<h1>Shopping Cart</h1>
+<div class="container mt-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item active">Shopping Cart</li>
+        </ol>
+    </nav>
 
-{% if order_items %}
-<div class="table-responsive">
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Book</th>
-                <th>Price</th>
-                <th>Quantity</th>
-                <th>Total</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in order_items %}
-            <tr>
-                <td>{{ item.BookID.Title }}</td>
-                <td>${{ item.UnitPrice }}</td>
-                <td>
-                    <form method="post" action="{% url 'update_cart' item.OrderItemID %}" class="d-inline">
-                        {% csrf_token %}
-                        <input type="number" name="quantity" value="{{ item.Quantity }}" min="0" max="{{ item.BookID.Stock }}" class="form-control form-control-sm d-inline" style="width: 80px;">
-                        <button type="submit" class="btn btn-sm btn-outline-primary">Update</button>
-                    </form>
-                </td>
-                <td>${{ item.TotalPrice }}</td>
-                <td>
-                    <form method="post" action="{% url 'update_cart' item.OrderItemID %}" class="d-inline">
-                        {% csrf_token %}
-                        <input type="hidden" name="quantity" value="0">
-                        <button type="submit" class="btn btn-sm btn-danger">Remove</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-        <tfoot>
-            <tr>
-                <td colspan="3"><strong>Total Amount:</strong></td>
-                <td colspan="2"><strong>${{ order.TotalAmount }}</strong></td>
-            </tr>
-        </tfoot>
-    </table>
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="section-title mb-0">Shopping Cart</h1>
+                <span class="badge bg-primary fs-6">{{ order_items|length }} items</span>
+            </div>
+
+            {% if order_items %}
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-borderless">
+                            <thead class="border-bottom">
+                                <tr>
+                                    <th scope="col" style="width: 60%">Product</th>
+                                    <th scope="col" class="text-center">Price</th>
+                                    <th scope="col" class="text-center">Quantity</th>
+                                    <th scope="col" class="text-center">Total</th>
+                                    <th scope="col" class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in order_items %}
+                                <tr class="border-bottom">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img src="{{ item.BookID.photo_url }}" 
+                                                 alt="{{ item.BookID.Title }}" 
+                                                 class="rounded me-3" 
+                                                 style="width: 80px; height: 100px; object-fit: cover;">
+                                            <div>
+                                                <h6 class="mb-1">{{ item.BookID.Title }}</h6>
+                                                <p class="text-muted small mb-1">by {{ item.BookID.AuthorID.full_name }}</p>
+                                                <span class="badge bg-light text-dark border">{{ item.BookID.GenreID.GenreName }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="fw-semibold">${{ item.UnitPrice }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <form method="post" action="{% url 'update_cart' item.OrderItemID %}" class="d-inline-flex align-items-center">
+                                            {% csrf_token %}
+                                            <div class="input-group input-group-sm" style="width: 120px;">
+                                                <button class="btn btn-outline-secondary" type="button" onclick="this.parentNode.querySelector('input[type=number]').stepDown()">-</button>
+                                                <input type="number" name="quantity" value="{{ item.Quantity }}" min="1" max="{{ item.BookID.Stock }}" class="form-control text-center" style="max-width: 60px;">
+                                                <button class="btn btn-outline-secondary" type="button" onclick="this.parentNode.querySelector('input[type=number]').stepUp()">+</button>
+                                            </div>
+                                            <button type="submit" class="btn btn-link text-primary btn-sm ms-2" title="Update">
+                                                <i class="fas fa-sync-alt"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="fw-bold text-primary">${{ item.TotalPrice }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <form method="post" action="{% url 'update_cart' item.OrderItemID %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="quantity" value="0">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Remove">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Continue Shopping -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body text-center">
+                    <a href="{% url 'book_list' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-2"></i>Continue Shopping
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <!-- Empty Cart -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-shopping-cart fa-4x text-muted mb-4"></i>
+                    <h3 class="text-muted">Your cart is empty</h3>
+                    <p class="text-muted mb-4">Discover our amazing collection of books and find your next favorite read.</p>
+                    <a href="{% url 'book_list' %}" class="btn btn-primary-custom btn-lg">
+                        <i class="fas fa-book me-2"></i>Start Shopping
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if order_items %}
+        <div class="col-lg-4">
+            <!-- Order Summary -->
+            <div class="card border-0 shadow-sm sticky-top" style="top: 100px;">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-receipt me-2"></i>Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Subtotal ({{ order_items|length }} items)</span>
+                        <span class="fw-semibold">${{ order.TotalAmount }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Shipping</span>
+                        <span class="fw-semibold text-success">FREE</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Tax</span>
+                        <span class="fw-semibold">${{ order.TotalAmount|floatformat:2 }}</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-4">
+                        <span class="fw-bold">Total</span>
+                        <span class="fw-bold fs-5 text-primary">${{ order.TotalAmount }}</span>
+                    </div>
+
+                    <div class="d-grid">
+                        <a href="{% url 'checkout' %}" class="btn btn-primary-custom btn-lg">
+                            <i class="fas fa-lock me-2"></i>Proceed to Checkout
+                        </a>
+                    </div>
+
+                    <!-- Trust Badges -->
+                    <div class="text-center mt-4">
+                        <div class="row">
+                            <div class="col-4">
+                                <i class="fas fa-shield-alt text-success mb-2"></i>
+                                <small class="d-block text-muted">Secure</small>
+                            </div>
+                            <div class="col-4">
+                                <i class="fas fa-shipping-fast text-success mb-2"></i>
+                                <small class="d-block text-muted">Free Shipping</small>
+                            </div>
+                            <div class="col-4">
+                                <i class="fas fa-undo-alt text-success mb-2"></i>
+                                <small class="d-block text-muted">Easy Returns</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Promo Code -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body">
+                    <h6 class="card-title mb-3">
+                        <i class="fas fa-tag me-2 text-primary"></i>Promo Code
+                    </h6>
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Enter promo code">
+                        <button class="btn btn-outline-primary" type="button">Apply</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
 </div>
 
-<div class="text-end">
-    <a href="{% url 'book_list' %}" class="btn btn-secondary">Continue Shopping</a>
-    <a href="{% url 'checkout' %}" class="btn btn-success">Proceed to Checkout</a>
-</div>
-{% else %}
-<div class="alert alert-info">
-    <p>Your cart is empty.</p>
-    <a href="{% url 'book_list' %}" class="btn btn-primary">Start Shopping</a>
-</div>
-{% endif %}
+<style>
+.sticky-top {
+    z-index: 1020;
+}
+
+.input-group input[type="number"]::-webkit-outer-spin-button,
+.input-group input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.input-group input[type="number"] {
+    -moz-appearance: textfield;
+}
+</style>
+
+<script>
+// Quantity button functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const quantityInputs = document.querySelectorAll('input[name="quantity"]');
+    quantityInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            if (this.value < 1) this.value = 1;
+            if (this.value > parseInt(this.max)) this.value = this.max;
+        });
+    });
+});
+</script>
 {% endblock %}

@@ -225,6 +225,43 @@ def order_detail(request, order_id):
         'order_items': order_items
     })
 
+@login_required
+def cancel_order(request, order_id):
+    """
+    View to cancel an order with enhanced validation
+    """
+    order = get_object_or_404(
+        Order, 
+        OrderID=order_id, 
+        CustomerID=request.user.customer
+    )
+    
+    # Check if order can be cancelled
+    cancellable_statuses = ['pending', 'processing']
+    
+    if order.OrderStatus in cancellable_statuses:
+        try:
+            # Restore stock for each item in the order
+            for item in order.orderitems.all():
+                book = item.BookID
+                book.Stock += item.Quantity
+                book.save()
+            
+            # Update order status to cancelled
+            order.OrderStatus = 'cancelled'
+            order.save()
+            
+            messages.success(request, f'Order #{order.OrderID} has been cancelled successfully.')
+            
+        except Exception as e:
+            messages.error(request, f'An error occurred while cancelling the order: {str(e)}')
+            
+    else:
+        status_display = dict(Order.ORDER_STATUS).get(order.OrderStatus, order.OrderStatus)
+        messages.error(request, f'Orders with status "{status_display}" cannot be cancelled.')
+    
+    return redirect('order_detail', order_id=order_id)
+
 def register(request):
     if request.method == 'POST':
         # Get form data
