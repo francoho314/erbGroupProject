@@ -10,7 +10,8 @@ from .forms import BookSearchForm, ReviewForm
 def home(request):
     books = Book.objects.filter(Stock__gt=0)[:8]
     genres = Genre.objects.all()[:6]
-    return render(request, 'pages/index.html', {
+    return render(request, 'books/home.html', {
+    #return render(request, 'pages/index.html', {
         'books': books,
         'genres': genres
     })
