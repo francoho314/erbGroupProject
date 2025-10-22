@@ -6,6 +6,9 @@ from django.contrib import messages
 from django.db.models import Q, Avg, Count, Sum  # Added database aggregates
 from .models import Book, Author, Genre, Order, OrderItem, Review, Customer
 from .forms import BookSearchForm, ReviewForm
+from django.core.mail import send_mail
+from .utils import send_order_confirmation_email, send_order_status_update_email
+
 
 def home(request):
     books = Book.objects.filter(Stock__gt=0)[:8]
@@ -166,7 +169,6 @@ def update_cart(request, order_item_id):
     
     return redirect('view_cart')
 
-@login_required
 def checkout(request):
     try:
         order = Order.objects.get(CustomerID=request.user.customer, OrderStatus='pending')
@@ -191,12 +193,62 @@ def checkout(request):
         order.OrderStatus = 'processing'
         order.save()
         
-        messages.success(request, 'Order placed successfully!')
+        # Send order confirmation email
+        email_sent = send_order_confirmation_email(order, order_items)
+        if email_sent:
+            messages.success(request, 'Order placed successfully! Confirmation email sent.')
+        else:
+            messages.success(request, 'Order placed successfully! (Email notification failed)')
+        
         return redirect('order_history')
         
     except Order.DoesNotExist:
         messages.error(request, 'No active order found.')
         return redirect('view_cart')
+
+@login_required
+def cancel_order(request, order_id):
+    """
+    View to cancel an order with enhanced validation
+    """
+    order = get_object_or_404(
+        Order, 
+        OrderID=order_id, 
+        CustomerID=request.user.customer
+    )
+    
+    # Check if order can be cancelled
+    cancellable_statuses = ['pending', 'processing']
+    
+    if order.OrderStatus in cancellable_statuses:
+        try:
+            # Restore stock for each item in the order
+            for item in order.orderitems.all():
+                book = item.BookID
+                book.Stock += item.Quantity
+                book.save()
+            
+            # Update order status to cancelled
+            order.OrderStatus = 'cancelled'
+            order.save()
+            
+            # Send cancellation email
+            send_order_status_update_email(
+                order, 
+                order.orderitems.all(), 
+                "Your order has been cancelled successfully."
+            )
+            
+            messages.success(request, f'Order #{order.OrderID} has been cancelled successfully. Confirmation email sent.')
+            
+        except Exception as e:
+            messages.error(request, f'An error occurred while cancelling the order: {str(e)}')
+            
+    else:
+        status_display = dict(Order.ORDER_STATUS).get(order.OrderStatus, order.OrderStatus)
+        messages.error(request, f'Orders with status "{status_display}" cannot be cancelled.')
+    
+    return redirect('order_detail', order_id=order_id)
 
 @login_required
 def order_history(request):
@@ -225,42 +277,7 @@ def order_detail(request, order_id):
         'order_items': order_items
     })
 
-@login_required
-def cancel_order(request, order_id):
-    """
-    View to cancel an order with enhanced validation
-    """
-    order = get_object_or_404(
-        Order, 
-        OrderID=order_id, 
-        CustomerID=request.user.customer
-    )
-    
-    # Check if order can be cancelled
-    cancellable_statuses = ['pending', 'processing']
-    
-    if order.OrderStatus in cancellable_statuses:
-        try:
-            # Restore stock for each item in the order
-            for item in order.orderitems.all():
-                book = item.BookID
-                book.Stock += item.Quantity
-                book.save()
-            
-            # Update order status to cancelled
-            order.OrderStatus = 'cancelled'
-            order.save()
-            
-            messages.success(request, f'Order #{order.OrderID} has been cancelled successfully.')
-            
-        except Exception as e:
-            messages.error(request, f'An error occurred while cancelling the order: {str(e)}')
-            
-    else:
-        status_display = dict(Order.ORDER_STATUS).get(order.OrderStatus, order.OrderStatus)
-        messages.error(request, f'Orders with status "{status_display}" cannot be cancelled.')
-    
-    return redirect('order_detail', order_id=order_id)
+
 
 def register(request):
     if request.method == 'POST':
@@ -325,3 +342,35 @@ def register(request):
     else:
         # GET request - show empty form
         return render(request, 'books/register.html')
+
+@login_required
+def update_order_status(request, order_id):
+    """
+    Admin view to update order status and send notification
+    """
+    if not request.user.is_staff:
+        return redirect('home')
+    
+    order = get_object_or_404(Order, OrderID=order_id)
+    
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
+        if new_status in dict(Order.ORDER_STATUS):
+            old_status = order.OrderStatus
+            order.OrderStatus = new_status
+            order.save()
+            
+            # Send status update email
+            status_messages = {
+                'processing': "Your order is being processed.",
+                'shipped': "Your order has been shipped!",
+                'delivered': "Your order has been delivered!",
+                'cancelled': "Your order has been cancelled."
+            }
+            
+            message = status_messages.get(new_status, f"Your order status has been updated to {new_status}.")
+            send_order_status_update_email(order, order.orderitems.all(), message)
+            
+            messages.success(request, f'Order status updated to {new_status}. Customer notified.')
+    
+    return redirect('admin:books_order_change', order_id=order_id)

@@ -91,3 +91,12 @@ LOGIN_URL = 'login'
 # Add this to handle login required redirects
 from django.urls import reverse_lazy
 LOGIN_URL = reverse_lazy('login')
+
+# Email Configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # Or your email provider
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'erbaffa@gmail.com'  # Your email
+EMAIL_HOST_PASSWORD = 'axlkszyvwxrcaokl'  # Your app password (not regular password)
+DEFAULT_FROM_EMAIL = 'BookHub <noreply@bookhub.com>'

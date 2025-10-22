@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #2c5530 0%, #4a7c59 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .status-update { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center; }
+        .order-info { background: #e8f5e8; padding: 15px; border-radius: 8px; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 BookHub</h1>
+            <h2>Order Status Update</h2>
+        </div>
+        
+        <div class="content">
+            <div class="status-update">
+                <h3 style="color: #2c5530;">Order #{{ order.OrderID }}</h3>
+                <p style="font-size: 18px; color: #4a7c59;">{{ status_message }}</p>
+            </div>
+
+            <div class="order-info">
+                <h4 style="color: #2c5530; margin-top: 0;">Order Details</h4>
+                <p><strong>Status:</strong> {{ order.OrderStatus|title }}</p>
+                <p><strong>Total Items:</strong> {{ order_items|length }}</p>
+                <p><strong>Total Amount:</strong> ${{ order.TotalAmount }}</p>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="http://localhost:8000/orders/{{ order.OrderID }}/" 
+                   style="background: #2c5530; color: white; padding: 12px 30px; text-decoration: none; border-radius: 25px; display: inline-block;">
+                   Track Your Order
+                </a>
+            </div>
+
+            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107;">
+                <h4 style="color: #856404; margin-top: 0;">Need Help?</h4>
+                <p style="color: #856404; margin: 0;">
+                    If you have any questions about your order, please contact our support team at 
+                    <a href="mailto:support@bookhub.com" style="color: #2c5530;">support@bookhub.com</a>
+                </p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2024 {{ site_name }}. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
