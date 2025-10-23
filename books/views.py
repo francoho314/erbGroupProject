@@ -5,7 +5,7 @@ from django.contrib.auth import login, authenticate
 from django.contrib import messages
 from django.db.models import Q, Avg, Count, Sum  # Added database aggregates
 from .models import Book, Author, Genre, Order, OrderItem, Review, Customer
-from .forms import BookSearchForm, ReviewForm
+from .forms import BookSearchForm, ReviewForm, CustomerProfileForm, UserProfileForm
 from django.core.mail import send_mail
 from .utils import send_order_confirmation_email, send_order_status_update_email
 
@@ -66,9 +66,43 @@ def book_detail(request, book_id):
     })
 
 def author_list(request):
+    # Get all authors
     authors = Author.objects.all()
-    return render(request, 'books/author_list.html', {'authors': authors})
-
+    
+    # Get filter parameters
+    letter_filter = request.GET.get('letter', '')
+    search_query = request.GET.get('search', '')
+    
+    # Apply alphabetical filter
+    if letter_filter:
+        authors = authors.filter(LastName__istartswith=letter_filter)
+    
+    # Apply search filter
+    if search_query:
+        authors = authors.filter(
+            Q(FirstName__icontains=search_query) |
+            Q(LastName__icontains=search_query)
+        )
+    
+    # Prepare alphabet data without needing custom filters
+    alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    letter_data = []
+    
+    for letter in alphabet:
+        count = Author.objects.filter(LastName__istartswith=letter).count()
+        letter_data.append({
+            'letter': letter,
+            'count': count,
+            'has_authors': count > 0
+        })
+    
+    return render(request, 'books/author_list.html', {
+        'authors': authors,
+        'letter_data': letter_data,
+        'current_letter': letter_filter,
+        'search_query': search_query,
+        'total_authors': authors.count()
+    })
 def author_detail(request, author_id):
     author = get_object_or_404(Author, pk=author_id)
     books = Book.objects.filter(AuthorID=author, Stock__gt=0)
@@ -374,3 +408,52 @@ def update_order_status(request, order_id):
             messages.success(request, f'Order status updated to {new_status}. Customer notified.')
     
     return redirect('admin:books_order_change', order_id=order_id)
+
+@login_required
+def profile_view(request):
+    """
+    View to display user profile
+    """
+    customer = request.user.customer
+    user_orders = Order.objects.filter(CustomerID=customer).order_by('-OrderDate')[:5]  # Recent orders
+    
+    context = {
+        'customer': customer,
+        'user_orders': user_orders,
+        'total_orders': Order.objects.filter(CustomerID=customer).count(),
+    }
+    return render(request, 'books/profile_view.html', context)
+
+@login_required
+def profile_edit(request):
+    """
+    View to edit user profile
+    """
+    customer = request.user.customer
+    user = request.user
+    
+    if request.method == 'POST':
+        customer_form = CustomerProfileForm(request.POST, instance=customer)
+        user_form = UserProfileForm(request.POST, instance=user)
+        
+        if customer_form.is_valid() and user_form.is_valid():
+            # Update user model
+            user_form.save()
+            
+            # Update customer model
+            customer_form.save()
+            
+            messages.success(request, 'Your profile has been updated successfully!')
+            return redirect('profile_view')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        customer_form = CustomerProfileForm(instance=customer)
+        user_form = UserProfileForm(instance=user)
+    
+    context = {
+        'customer_form': customer_form,
+        'user_form': user_form,
+        'customer': customer,
+    }
+    return render(request, 'books/profile_edit.html', context)

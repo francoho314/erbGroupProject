@@ -29,3 +29,29 @@ class ReviewForm(forms.ModelForm):
         widgets = {
             'ReviewText': forms.Textarea(attrs={'rows': 4}),
         }
+
+class CustomerProfileForm(forms.ModelForm):
+    class Meta:
+        model = Customer
+        fields = ['FirstName', 'LastName', 'Email', 'Phone', 'Address', 'City', 'State', 'ZipCode']
+        widgets = {
+            'FirstName': forms.TextInput(attrs={'class': 'form-control'}),
+            'LastName': forms.TextInput(attrs={'class': 'form-control'}),
+            'Email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'Phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'Address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'City': forms.TextInput(attrs={'class': 'form-control'}),
+            'State': forms.TextInput(attrs={'class': 'form-control'}),
+            'ZipCode': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+class UserProfileForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'first_name', 'last_name']
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+        }

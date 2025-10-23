@@ -61,6 +61,8 @@ class Customer(models.Model):
     City = models.CharField(max_length=100)
     State = models.CharField(max_length=100)
     ZipCode = models.CharField(max_length=10)
+    ProfilePicture = models.CharField(max_length=200, blank=True, null=True)  # Optional: for profile pics
+    DateJoined = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.FirstName} {self.LastName}"

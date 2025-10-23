@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile - BookHub{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item active">My Profile</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Profile Sidebar -->
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="profile-avatar mb-3">
+                        <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                            <i class="fas fa-user fa-3x text-white"></i>
+                        </div>
+                    </div>
+                    <h4 class="card-title">{{ customer.get_full_name }}</h4>
+                    <p class="text-muted">Member since {{ customer.DateJoined|date:"F Y" }}</p>
+                    
+                    <div class="profile-stats mb-4">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="fw-bold text-primary fs-4">{{ total_orders }}</div>
+                                <div class="text-muted small">Orders</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="fw-bold text-primary fs-4">{{ user_orders|length }}</div>
+                                <div class="text-muted small">Recent</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'profile_edit' %}" class="btn btn-primary-custom">
+                            <i class="fas fa-edit me-2"></i>Edit Profile
+                        </a>
+                        <a href="{% url 'order_history' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-history me-2"></i>Order History
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Details -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-circle me-2 text-primary"></i>
+                        Profile Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold text-muted">Full Name</label>
+                                <p class="fs-5">{{ customer.get_full_name }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold text-muted">Username</label>
+                                <p class="fs-5">{{ user.username }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold text-muted">Email Address</label>
+                                <p class="fs-5">{{ customer.Email }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold text-muted">Phone Number</label>
+                                <p class="fs-5">{{ customer.Phone|default:"Not provided" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-muted">Address</label>
+                        <p class="fs-6">
+                            {{ customer.Address }}<br>
+                            {{ customer.City }}, {{ customer.State }} {{ customer.ZipCode }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Orders -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock me-2 text-primary"></i>
+                        Recent Orders
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if user_orders %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Date</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in user_orders %}
+                                <tr>
+                                    <td>#{{ order.OrderID }}</td>
+                                    <td>{{ order.OrderDate|date:"M d, Y" }}</td>
+                                    <td>${{ order.TotalAmount }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if order.OrderStatus == 'delivered' %}bg-success
+                                            {% elif order.OrderStatus == 'processing' %}bg-primary
+                                            {% elif order.OrderStatus == 'shipped' %}bg-info
+                                            {% elif order.OrderStatus == 'cancelled' %}bg-danger
+                                            {% else %}bg-warning{% endif %}">
+                                            {{ order.OrderStatus|title }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'order_detail' order.OrderID %}" class="btn btn-outline-primary btn-sm">
+                                            View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-shopping-bag fa-2x text-muted mb-3"></i>
+                        <p class="text-muted">No orders yet</p>
+                        <a href="{% url 'book_list' %}" class="btn btn-primary-custom">Start Shopping</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.profile-avatar {
+    transition: transform 0.3s ease;
+}
+
+.profile-avatar:hover {
+    transform: scale(1.05);
+}
+
+.profile-stats .fw-bold {
+    font-size: 1.5rem;
+}
+</style>
+{% endblock %}

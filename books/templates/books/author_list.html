@@ -62,20 +62,40 @@
     </div>
 
     <!-- Alphabetical Navigation -->
-    <div class="row mt-5">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">Browse Authors Alphabetically</h5>
-                    <div class="d-flex flex-wrap gap-2">
-                        {% for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" %}
-                        <a href="#{{ letter }}" class="btn btn-outline-secondary btn-sm">{{ letter }}</a>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
+    <div class="alphabet-filter">
+        <h6 class="mb-3">
+            <i class="fas fa-filter me-2 text-primary"></i>
+            Browse Authors Alphabetically
+            {% if current_letter %}
+            <span class="badge bg-primary ms-2">Filtered: {{ current_letter }}</span>
+            {% endif %}
+        </h6>
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <!-- Show All -->
+            <a href="{% url 'author_list' %}{% if search_query %}?search={{ search_query }}{% endif %}" 
+               class="btn {% if not current_letter %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm alphabet-btn">
+                All
+                <span class="badge bg-light text-dark ms-1">{{ total_authors }}</span>
+            </a>
+            
+            <!-- Alphabet Letters -->
+            {% for item in letter_data %}
+                {% if item.has_authors %}
+                <a href="{% url 'author_list' %}?letter={{ item.letter }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                   class="btn {% if current_letter == item.letter %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm alphabet-btn">
+                    {{ item.letter }}
+                    <span class="badge bg-light text-dark ms-1">{{ item.count }}</span>
+                </a>
+                {% else %}
+                <span class="btn btn-outline-secondary btn-sm alphabet-btn disabled" style="opacity: 0.5;">
+                    {{ item.letter }}
+                    <span class="badge bg-light text-dark ms-1">0</span>
+                </span>
+                {% endif %}
+            {% endfor %}
         </div>
     </div>
+
 </div>
 
 <style>
