@@ -1,60 +1,219 @@
 {% extends 'new_base.html' %}
 
 {% block content %}
-<h1>Shopping Cart</h1>
-
-{% if order_items %}
-<div class="table-responsive">
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Book</th>
-                <th>Price</th>
-                <th>Quantity</th>
-                <th>Total</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in order_items %}
-            <tr>
-                <td>{{ item.BookID.Title }}</td>
-                <td>${{ item.UnitPrice }}</td>
-                <td>
-                    <form method="post" action="{% url 'update_cart' item.OrderItemID %}" class="d-inline">
-                        {% csrf_token %}
-                        <input type="number" name="quantity" value="{{ item.Quantity }}" min="0" max="{{ item.BookID.Stock }}" class="form-control form-control-sm d-inline" style="width: 80px;">
-                        <button type="submit" class="btn btn-sm btn-outline-primary">Update</button>
-                    </form>
-                </td>
-                <td>${{ item.TotalPrice }}</td>
-                <td>
-                    <form method="post" action="{% url 'update_cart' item.OrderItemID %}" class="d-inline">
-                        {% csrf_token %}
-                        <input type="hidden" name="quantity" value="0">
-                        <button type="submit" class="btn btn-sm btn-danger">Remove</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-        <tfoot>
-            <tr>
-                <td colspan="3"><strong>Total Amount:</strong></td>
-                <td colspan="2"><strong>${{ order.TotalAmount }}</strong></td>
-            </tr>
-        </tfoot>
-    </table>
-</div>
-
-<div class="text-end">
-    <a href="{% url 'book_list' %}" class="btn btn-secondary">Continue Shopping</a>
-    <a href="{% url 'checkout' %}" class="btn btn-success">Proceed to Checkout</a>
-</div>
-{% else %}
-<div class="alert alert-info">
-    <p>Your cart is empty.</p>
-    <a href="{% url 'book_list' %}" class="btn btn-primary">Start Shopping</a>
-</div>
-{% endif %}
+        <!-- Page title -->
+        <section id="page-title">
+            <div class="container">
+                <div class="page-title">
+                    <h1>Shopping Cart</h1>
+                    <span>Shopping details</span>
+                </div>
+                <div class="breadcrumb">
+                    <ul>
+                        <li><a href="#">Home</a>
+                        </li>
+                        <li><a href="#">Shop</a>
+                        </li>
+                        <li class="active"><a href="#">Shopping Cart</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        <!-- end: Page title -->
+        <!-- SHOP CART -->
+        <section id="shop-cart">
+            <div class="container">
+                <div class="shop-cart">
+                    {% if order_items %}
+                    <div class="table table-sm table-striped table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th class="cart-product-remove"></th>
+                                    <th class="cart-product-thumbnail">Product</th>
+                                    <th class="cart-product-name">Description</th>
+                                    <th class="cart-product-price">Unit Price</th>
+                                    <th class="cart-product-quantity">Quantity</th>
+                                    <th class="cart-product-subtotal">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in order_items %}
+                                <tr>
+                                    <td class="cart-product-remove">
+                                        <form method="post" action="{% url 'update_cart' item.OrderItemID %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="quantity" value="0">
+                                            <button type="submit" class="btn btn-link p-0 border-0 bg-transparent"><i class="fa fa-times"></i></button>
+                                        </form>
+                                    </td>
+                                    <td class="cart-product-thumbnail">
+                                        <a href="#">
+                                            <!-- 假设有商品图片字段 -->
+                                            <img src="{{ item.BookID.ImageURL|default:'images/shop/products/1.jpg' }}" alt="{{ item.BookID.Title }}">
+                                        </a>
+                                        <div class="cart-product-thumbnail-name">{{ item.BookID.Title }}</div>
+                                    </td>
+                                    <td class="cart-product-description">
+                                        <p><span>{{ item.BookID.Title }}</span>
+                                            <!-- 假设有更多商品描述字段 -->
+                                            <span>Author: {{ item.BookID.Author|default:'Unknown' }}</span>
+                                            <span>ISBN: {{ item.BookID.ISBN|default:'N/A' }}</span>
+                                        </p>
+                                    </td>
+                                    <td class="cart-product-price">
+                                        <span class="amount">${{ item.UnitPrice }}</span>
+                                    </td>
+                                    <td class="cart-product-quantity">
+                                        <form method="post" action="{% url 'update_cart' item.OrderItemID %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <div class="quantity">
+                                                <input type="button" class="minus" value="-">
+                                                <input type="text" class="qty" value="{{ item.Quantity }}" name="quantity" min="0" max="{{ item.BookID.Stock }}">
+                                                <input type="button" class="plus" value="+">
+                                            </div>
+                                            <button type="submit" class="btn btn-sm btn-outline-primary mt-1">Update</button>
+                                        </form>
+                                    </td>
+                                    <td class="cart-product-subtotal">
+                                        <span class="amount">${{ item.TotalPrice }}</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-4">
+                            <form class="form-inline">
+                                <div class="input-group">
+                                    <input type="text" placeholder="Coupon Code" id="CouponCode" class="form-control">
+                                    <button type="submit" id="widget-subscribe-submit-button"
+                                        class="btn btn-primary">Apply</button>
+                                </div>
+                                <p class="small">Enter any valid coupon or promo code here to redeem your discount.</p>
+                            </form>
+                        </div>
+                        <div class="col-lg-8 text-end">
+                            <a href="{% url 'book_list' %}" class="btn btn-secondary">Continue Shopping</a>
+                            <a href="{% url 'checkout' %}" class="btn btn-success">Proceed to Checkout</a>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <hr class="space">
+                        <div class="col-lg-6">
+                            <h4>Calculate Shipping</h4>
+                            <form class="row">
+                                <div class="col-lg-12 m-b-20">
+                                    <select class="form-select">
+                                        <option value="AX">Åland Islands</option>
+                                        <!-- 国家选项列表，保留原样 -->
+                                        <option selected="selected" value="GB">United Kingdom (UK)</option>
+                                        <option value="US">United States (US)</option>
+                                    </select>
+                                </div>
+                                <div class="col-lg-6 form-group">
+                                    <input type="text" placeholder="State / County" class="form-control">
+                                </div>
+                                <div class="col-lg-6  form-group">
+                                    <input type="text" class="form-control" placeholder="Post Code / Zip">
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-lg-6 p-r-10 ">
+                            <div class="table-responsive">
+                                <h4>Cart Subtotal</h4>
+                                <table class="table">
+                                    <tbody>
+                                        <tr>
+                                            <td class="cart-product-name">
+                                                <strong>Cart Subtotal</strong>
+                                            </td>
+                                            <td class="cart-product-name text-end">
+                                                <span class="amount">${{ order.TotalAmount }}</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="cart-product-name">
+                                                <strong>Shipping</strong>
+                                            </td>
+                                            <td class="cart-product-name  text-end">
+                                                <span class="amount">Free Shipping</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="cart-product-name">
+                                                <strong>Coupon</strong>
+                                            </td>
+                                            <td class="cart-product-name  text-end">
+                                                <span class="amount">-0%</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="cart-product-name">
+                                                <strong>Total</strong>
+                                            </td>
+                                            <td class="cart-product-name text-end">
+                                                <span class="amount color lead"><strong>${{ order.TotalAmount }}</strong></span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <a href="{% url 'checkout' %}" class="btn icon-left float-right"><span>Proceed to Checkout</span></a>
+                        </div>
+                    </div>
+                    {% else %}
+<!-- SHOP CART EMPTY -->
+<section id="shop-cart">
+    <div class="container">
+        <div class="p-t-10 m-b-20 text-center">
+            <div class="heading-text heading-line text-center">
+                <h4>Your cart is currently empty.</h4>
+            </div>
+            <a class="btn icon-left" href="{% url 'book_list' %}"><span>Return To Shop</span></a>
+        </div>
+    </div>
+</section>
+<!-- end: SHOP CART EMPTY -->
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+        <!-- end: SHOP CART -->
+        <!-- DELIVERY INFO -->
+        <section class="background-grey p-t-40 p-b-0">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-4">
+                        <div class="icon-box effect small clean">
+                            <div class="icon">
+                                <a href="#"><i class="fa fa-gift"></i></a>
+                            </div>
+                            <h3>Free shipping on orders $60+</h3>
+                            <p>Order more than 60$ and you will get free shippining Worldwide. More info.</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="icon-box effect small clean">
+                            <div class="icon">
+                                <a href="#"><i class="fa fa-plane"></i></a>
+                            </div>
+                            <h3>Worldwide delivery</h3>
+                            <p>We deliver to the following countries: USA, Canada, Europe, Australia</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="icon-box effect small clean">
+                            <div class="icon">
+                                <a href="#"><i class="fa fa-history"></i></a>
+                            </div>
+                            <h3>60 days money back guranty!</h3>
+                            <p>Not happy with our product, feel free to return it, we will refund 100% your money!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 {% endblock %}

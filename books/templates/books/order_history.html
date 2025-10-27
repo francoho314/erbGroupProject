@@ -3,74 +3,135 @@
 {% block title %}Order History - BookStore{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <h1>Order History</h1>
-        <p class="lead">View your past orders and their details.</p>
-
-        {% if orders %}
-        <div class="table-responsive">
-            <table class="table table-striped table-hover">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Order ID</th>
-                        <th>Date</th>
-                        <th>Items</th>
-                        <th>Total Amount</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for order in orders %}
-                    <tr>
-                        <td>
-                            <strong>#{{ order.OrderID }}</strong>
-                        </td>
-                        <td>{{ order.OrderDate|date:"M d, Y H:i" }}</td>
-                        <td>
-                            {{ order.orderitems.count }} item{{ order.orderitems.count|pluralize }}
-                        </td>
-                        <td>${{ order.TotalAmount }}</td>
-                        <td>
-                            <span class="badge 
-                                {% if order.OrderStatus == 'delivered' %}bg-success
-                                {% elif order.OrderStatus == 'processing' %}bg-primary
-                                {% elif order.OrderStatus == 'shipped' %}bg-info
-                                {% elif order.OrderStatus == 'cancelled' %}bg-danger
-                                {% else %}bg-warning{% endif %}">
-                                {{ order.OrderStatus|title }}
-                            </span>
-                        </td>
-                        <td>
-                            <a href="{% url 'order_detail' order.OrderID %}" 
-                               class="btn btn-primary btn-sm">
-                                View Details
-                            </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        
-        {% if orders|length > 10 %}
-        <div class="d-flex justify-content-between align-items-center mt-4">
-            <div>
-                <p class="text-muted">
-                    Showing {{ orders|length }} order{{ orders|length|pluralize }}
-                </p>
+        <!-- Page title -->
+        <section id="page-title">
+            <div class="container">
+                <div class="page-title">
+                    <h1>Order History</h1>
+                    <span>View your past orders and their details</span>
+                </div>
+                <div class="breadcrumb">
+                    <ul>
+                        <li><a href="{% url 'home' %}">Home</a>
+                        </li>
+                        <li class="active"><a href="#">Order History</a>
+                        </li>
+                    </ul>
+                </div>
             </div>
-        </div>
-        {% endif %}
-        
-        {% else %}
-        <div class="alert alert-info text-center">
-            <h4>No Orders Yet</h4>
-            <p>You haven't placed any orders yet. Start shopping to see your order history here!</p>
-            <a href="{% url 'book_list' %}" class="btn btn-primary">Start Shopping</a>
-        </div>
-        {% endif %}
-    </div>
-</div>
+        </section>
+        <!-- end: Page title -->
+
+        <!-- ORDER HISTORY -->
+        <section id="shop-cart">
+            <div class="container">
+                <div class="shop-cart">
+                    {% if orders %}
+                    <div class="table table-sm table-striped table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th class="cart-product-thumbnail">Order ID</th>
+                                    <th class="cart-product-name">Date</th>
+                                    <th class="cart-product-price">Items</th>
+                                    <th class="cart-product-quantity">Total Amount</th>
+                                    <th class="cart-product-subtotal">Status</th>
+                                    <th class="cart-product-remove">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in orders %}
+                                <tr>
+                                    <td class="cart-product-thumbnail">
+                                        <strong>#{{ order.OrderID }}</strong>
+                                    </td>
+                                    <td class="cart-product-name">
+                                        <span>{{ order.OrderDate|date:"M d, Y H:i" }}</span>
+                                    </td>
+                                    <td class="cart-product-price">
+                                        <span class="amount">{{ order.orderitems.count }} item{{ order.orderitems.count|pluralize }}</span>
+                                    </td>
+                                    <td class="cart-product-quantity">
+                                        <span class="amount">${{ order.TotalAmount }}</span>
+                                    </td>
+                                    <td class="cart-product-subtotal">
+                                        <span class="badge 
+                                            {% if order.OrderStatus == 'delivered' %}bg-success
+                                            {% elif order.OrderStatus == 'processing' %}bg-primary
+                                            {% elif order.OrderStatus == 'shipped' %}bg-info
+                                            {% elif order.OrderStatus == 'cancelled' %}bg-danger
+                                            {% else %}bg-warning{% endif %}">
+                                            {{ order.OrderStatus|title }}
+                                        </span>
+                                    </td>
+                                    <td class="cart-product-remove">
+                                        <a href="{% url 'order_detail' order.OrderID %}" 
+                                           class="btn btn-primary btn-sm">
+                                            View Details
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {% if orders|length > 10 %}
+                    <div class="row">
+                        <div class="col-lg-12 text-center">
+                            <p class="text-muted">
+                                Showing {{ orders|length }} order{{ orders|length|pluralize }}
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% else %}
+                    <div class="p-t-10 m-b-20 text-center">
+                        <div class="heading-text heading-line text-center">
+                            <h4>No Orders Yet</h4>
+                        </div>
+                        <p>You haven't placed any orders yet. Start shopping to see your order history here!</p>
+                        <a class="btn icon-left" href="{% url 'book_list' %}"><span>Start Shopping</span></a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+        <!-- end: ORDER HISTORY -->
+
+        <!-- DELIVERY INFO -->
+        <section class="background-grey p-t-40 p-b-0">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-4">
+                        <div class="icon-box effect small clean">
+                            <div class="icon">
+                                <a href="#"><i class="fa fa-gift"></i></a>
+                            </div>
+                            <h3>Free shipping on orders $60+</h3>
+                            <p>Order more than 60$ and you will get free shipping Worldwide.</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="icon-box effect small clean">
+                            <div class="icon">
+                                <a href="#"><i class="fa fa-plane"></i></a>
+                            </div>
+                            <h3>Worldwide delivery</h3>
+                            <p>We deliver to all major countries worldwide with fast shipping.</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="icon-box effect small clean">
+                            <div class="icon">
+                                <a href="#"><i class="fa fa-history"></i></a>
+                            </div>
+                            <h3>30 days return policy</h3>
+                            <p>Not satisfied with your order? Return it within 30 days for a full refund!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 {% endblock %}
