@@ -84,7 +84,7 @@
             <div class="header-extras">
                 <ul>
                     {% if user.is_authenticated %}
-                        <li class="nav-item me-3">
+                        <li class="nav-item me-3 dropdown" style="margin-top: 4px;">
                             <a class="nav-link position-relative" href="{% url 'view_cart' %}">
                                 <i class="fas fa-shopping-cart"></i>
                                 {% if cart_count > 0 %}
@@ -92,7 +92,7 @@
                                 {% endif %}
                             </a>
                         </li>
-                        <li class="nav-item dropdown">
+                        <li class="nav-item me-3 dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                                 <i class="fas fa-user-circle me-1"></i> {{ user.username }}
                             </a>

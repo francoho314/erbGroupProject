@@ -1,45 +1,209 @@
 {% extends 'new_base.html' %}
 
+{% block title %}{{ author.full_name }} - BookStore{% endblock %}
+
 {% block content %}
-<div class="row">
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h2>{{ author.full_name }}</h2>
-                {% if author.DateOfBirth %}
-                    <p><strong>Born:</strong> {{ author.DateOfBirth|date:"F d, Y" }}</p>
-                {% endif %}
-                {% if author.DateOfDeath %}
-                    <p><strong>Died:</strong> {{ author.DateOfDeath|date:"F d, Y" }}</p>
-                {% endif %}
-                {% if author.Bio %}
-                    <p>{{ author.Bio }}</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-8">
-        <h3>Books by {{ author.full_name }}</h3>
-        <div class="row">
-            {% for book in books %}
-            <div class="col-md-6 mb-3">
-                <div class="card h-100">
-                    <img src="{{ book.photo_url }}" class="card-img-top" alt="{{ book.Title }}" style="height: 200px; object-fit: cover;">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ book.Title }}</h5>
-                        <p class="card-text">{{ book.GenreID.GenreName }}</p>
-                        <p class="card-text">${{ book.Price }}</p>
-                        <a href="{% url 'book_detail' book.BookID %}" class="btn btn-primary btn-sm">View Details</a>
-                    </div>
+        <!-- Page title -->
+        <section id="page-title">
+            <div class="container">
+                <div class="page-title">
+                    <h1>{{ author.full_name }}</h1>
+                    <span>{{ books|length }} books available</span>
+                </div>
+                <div class="breadcrumb">
+                    <ul>
+                        <li><a href="{% url 'home' %}">Home</a>
+                        </li>
+                        <li><a href="{% url 'book_list' %}">Books</a>
+                        </li>
+                        <li class="active"><a href="#">{{ author.full_name }}</a>
+                        </li>
+                    </ul>
                 </div>
             </div>
-            {% empty %}
-            <div class="col-12">
-                <p>No books available by this author.</p>
+        </section>
+        <!-- end: Page title -->
+        <!-- Shop products -->
+        <section id="page-content" class="sidebar-left">
+            <div class="container">
+                <div class="row">
+                    <!-- Content-->
+                    <div class="content col-lg-9">
+                        <div class="row m-b-20">
+                            <div class="col-lg-6 p-t-10 m-b-20">
+                                <h3 class="m-b-20">Books by {{ author.full_name }}</h3>
+                                <p>Discover the complete collection of works by this talented author.</p>
+                            </div>
+                            <div class="col-lg-3">
+                                <div class="order-select">
+                                    <h6>Sort by</h6>
+                                    <p>Showing {{ books|length }} results</p>
+                                    <form method="get">
+                                        <select class="form-select">
+                                            <option selected="selected" value="order">Default sorting</option>
+                                            <option value="popularity">Sort by popularity</option>
+                                            <option value="rating">Sort by average rating</option>
+                                            <option value="date">Sort by newness</option>
+                                            <option value="price">Sort by price: low to high</option>
+                                            <option value="price-desc">Sort by price: high to low</option>
+                                        </select>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="col-lg-3">
+                                <div class="order-select">
+                                    <h6>Filter by Price</h6>
+                                    <p>All price ranges</p>
+                                    <form method="get">
+                                        <select class="form-select">
+                                            <option selected="selected" value="">All Prices</option>
+                                            <option value="">0$ - 20$</option>
+                                            <option value="">21$ - 40$</option>
+                                            <option value="">41$ - 60$</option>
+                                            <option value="">61$+</option>
+                                        </select>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <!--Product list-->
+                        <div class="shop">
+                            <div class="grid-layout grid-3-columns" data-item="grid-item">
+                                {% for book in books %}
+                                <div class="grid-item">
+                                    <div class="product">
+                                        <div class="product-image">
+                                            <a href="{% url 'book_detail' book.BookID %}">
+                                                <img alt="{{ book.Title }}" src="{{ book.photo_url }}">
+                                            </a>
+                                            {% if forloop.counter <= 2 %}
+                                            <span class="product-new">NEW</span>
+                                            {% endif %}
+                                            <span class="product-wishlist">
+                                                <a href="#"><i class="fa fa-heart"></i></a>
+                                            </span>
+                                            <div class="product-overlay">
+                                                <a href="{% url 'book_detail' book.BookID %}">Quick View</a>
+                                            </div>
+                                        </div>
+                                        <div class="product-description">
+                                            <div class="product-category">{{ book.GenreID.GenreName }}</div>
+                                            <div class="product-title">
+                                                <h3><a href="{% url 'book_detail' book.BookID %}">{{ book.Title }}</a></h3>
+                                            </div>
+                                            <div class="product-price"><ins>${{ book.Price }}</ins></div>
+                                            <div class="product-rate">
+                                                <i class="fa fa-star"></i>
+                                                <i class="fa fa-star"></i>
+                                                <i class="fa fa-star"></i>
+                                                <i class="fa fa-star"></i>
+                                                <i class="fa fa-star-half-o"></i>
+                                            </div>
+                                            <div class="product-reviews"><a href="#">128 customer reviews</a></div>
+                                            <div class="product-actions mt-2">
+                                                {% if book.is_available %}
+                                                    <span class="badge bg-success">In Stock</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Out of Stock</span>
+                                                {% endif %}
+                                                <div class="mt-2">
+                                                    <a href="{% url 'book_detail' book.BookID %}" class="btn btn-outline-primary btn-sm">View Details</a>
+                                                    {% if book.is_available and user.is_authenticated %}
+                                                        <a href="{% url 'add_to_cart' book.BookID %}" class="btn btn-primary btn-sm mt-1">
+                                                            <i class="fa fa-cart-plus"></i> Add to Cart
+                                                        </a>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <div class="col-12 text-center py-5">
+                                    <i class="fa fa-book fa-3x text-muted mb-3"></i>
+                                    <h4 class="text-muted">No Books Available</h4>
+                                    <p class="text-muted">No books found by {{ author.full_name }}.</p>
+                                    <a href="{% url 'book_list' %}" class="btn btn-primary">Browse All Books</a>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <hr class="space">
+                            <!-- Pagination -->
+                            {% if books.has_other_pages %}
+                            <ul class="pagination">
+                                {% if books.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ books.previous_page_number }}">
+                                        <i class="fa fa-angle-left"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                {% for i in books.paginator.page_range %}
+                                <li class="page-item {% if books.number == i %}active{% endif %}">
+                                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                                </li>
+                                {% endfor %}
+                                
+                                {% if books.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ books.next_page_number }}">
+                                        <i class="fa fa-angle-right"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                            {% endif %}
+                            <!-- end: Pagination -->
+                        </div>
+                        <!--End: Product list-->
+                    </div>
+                    <!-- end: Content-->
+                    <!-- Sidebar-->
+                    <div class="sidebar col-lg-3">
+                        <!-- Author Information -->
+                        <div class="widget clearfix widget-archive">
+                            <h4 class="widget-title">About the Author</h4>
+                            <div class="author-info">
+                                <div class="text-center mb-3">
+                                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                                        <i class="fa fa-user fa-3x"></i>
+                                    </div>
+                                </div>
+                                <h5 class="text-center">{{ author.full_name }}</h5>
+                                
+                                {% if author.DateOfBirth %}
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted">Born:</span>
+                                    <strong>{{ author.DateOfBirth|date:"F d, Y" }}</strong>
+                                </div>
+                                {% endif %}
+                                
+                                {% if author.DateOfDeath %}
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted">Died:</span>
+                                    <strong>{{ author.DateOfDeath|date:"F d, Y" }}</strong>
+                                </div>
+                                {% endif %}
+                                
+                                {% if author.Bio %}
+                                <div class="mt-3">
+                                    <h6>Biography</h6>
+                                    <p class="small">{{ author.Bio|truncatewords:50 }}</p>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="d-flex justify-content-between mt-3">
+                                    <span class="text-muted">Total Books:</span>
+                                    <strong>{{ books|length }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                    <!-- end: Sidebar-->
+                </div>
             </div>
-            {% endfor %}
-        </div>
-    </div>
-</div>
+        </section>
+        <!-- end: Shop products -->
 {% endblock %}

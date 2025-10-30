@@ -1,36 +1,158 @@
 {% extends 'new_base.html' %}
 
+{% block title %}{{ genre.GenreName }} Books - BookStore{% endblock %}
+
 {% block content %}
-<h1>Books in {{ genre.GenreName }}</h1>
-<div class="row">
-    {% for book in books %}
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <img src="{{ book.photo_url }}" class="card-img-top" alt="{{ book.Title }}" style="height: 250px; object-fit: cover;">
-            <div class="card-body">
-                <h5 class="card-title">{{ book.Title }}</h5>
-                <p class="card-text">{{ book.AuthorID.full_name }}</p>
-                <p class="card-text">${{ book.Price }}</p>
-                <p class="card-text">
-                    {% if book.is_available %}
-                        <span class="badge bg-success">In Stock</span>
-                    {% else %}
-                        <span class="badge bg-danger">Out of Stock</span>
+        <!-- Page title -->
+        <section id="page-title">
+            <div class="container">
+                <div class="page-title">
+                    <h1>{{ genre.GenreName }} Books</h1>
+                    <span>{{ books|length }} books found</span>
+                </div>
+                <div class="breadcrumb">
+                    <ul>
+                        <li><a href="{% url 'home' %}">Home</a>
+                        </li>
+                        <li><a href="{% url 'book_list' %}">Books</a>
+                        </li>
+                        <li class="active"><a href="#">{{ genre.GenreName }}</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        <!-- end: Page title -->
+        <!-- Shop products -->
+        <section>
+            <div class="container">
+                <div class="row m-b-20">
+                    <div class="col-lg-6 p-t-10 m-b-20">
+                        <h3 class="m-b-20">{{ genre.GenreName }} Collection</h3>
+                        <p>Discover our curated selection of {{ genre.GenreName|lower }} books from talented authors.</p>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="order-select">
+                            <h6>Sort by</h6>
+                            <p>Showing {{ books|length }} results</p>
+                            <form method="get">
+                                <select class="form-select">
+                                    <option value="order" selected="selected">Default sorting</option>
+                                    <option value="popularity">Sort by popularity</option>
+                                    <option value="rating">Sort by average rating</option>
+                                    <option value="date">Sort by newness</option>
+                                    <option value="price">Sort by price: low to high</option>
+                                    <option value="price-desc">Sort by price: high to low</option>
+                                </select>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="order-select">
+                            <h6>Filter by Price</h6>
+                            <p>All price ranges</p>
+                            <form method="get">
+                                <select class="form-select">
+                                    <option value="" selected="selected">All Prices</option>
+                                    <option value="">0$ - 20$</option>
+                                    <option value="">21$ - 40$</option>
+                                    <option value="">41$ - 60$</option>
+                                    <option value="">61$+</option>
+                                </select>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <!--Product list-->
+                <div class="shop">
+                    <div class="grid-layout grid-4-columns" data-item="grid-item">
+                        {% for book in books %}
+                        <div class="grid-item">
+                            <div class="product">
+                                <div class="product-image">
+                                    <a href="{% url 'book_detail' book.BookID %}">
+                                        <img alt="{{ book.Title }}" src="{{ book.photo_url }}">
+                                    </a>
+                                    {% if forloop.counter <= 2 %}
+                                    <span class="product-new">NEW</span>
+                                    {% endif %}
+                                    <span class="product-wishlist">
+                                        <a href="#"><i class="fa fa-heart"></i></a>
+                                    </span>
+                                    <div class="product-overlay">
+                                        <a href="{% url 'book_detail' book.BookID %}">Quick View</a>
+                                    </div>
+                                </div>
+                                <div class="product-description">
+                                    <div class="product-category">{{ book.GenreID.GenreName }}</div>
+                                    <div class="product-title">
+                                        <h3><a href="{% url 'book_detail' book.BookID %}">{{ book.Title }}</a></h3>
+                                    </div>
+                                    <div class="product-price"><ins>${{ book.Price }}</ins></div>
+                                    <div class="product-rate">
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star-half-o"></i>
+                                    </div>
+                                    <div class="product-reviews"><a href="#">128 customer reviews</a></div>
+                                    <div class="product-actions mt-2">
+                                        {% if book.is_available %}
+                                            <span class="badge bg-success">In Stock</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Out of Stock</span>
+                                        {% endif %}
+                                        <div class="mt-2">
+                                            {% if book.is_available and user.is_authenticated %}
+                                                <a href="{% url 'add_to_cart' book.BookID %}" class="btn btn-primary btn-sm mt-1">
+                                                    <i class="fa fa-cart-plus"></i> Add to Cart
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12 text-center py-5">
+                            <i class="fa fa-search fa-3x text-muted mb-3"></i>
+                            <h4 class="text-muted">No books found in {{ genre.GenreName }}</h4>
+                            <p class="text-muted">Try browsing other genres or check back later for new arrivals.</p>
+                            <a href="{% url 'book_list' %}" class="btn btn-primary">Browse All Books</a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <hr class="space">
+                    <!-- Pagination -->
+                    {% if books.has_other_pages %}
+                    <ul class="pagination">
+                        {% if books.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ books.previous_page_number }}">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for i in books.paginator.page_range %}
+                        <li class="page-item {% if books.number == i %}active{% endif %}">
+                            <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                        </li>
+                        {% endfor %}
+                        
+                        {% if books.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ books.next_page_number }}">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
                     {% endif %}
-                </p>
+                    <!-- end: Pagination -->
+                </div>
             </div>
-            <div class="card-footer">
-                <a href="{% url 'book_detail' book.BookID %}" class="btn btn-primary btn-sm">View Details</a>
-                {% if book.is_available and user.is_authenticated %}
-                    <a href="{% url 'add_to_cart' book.BookID %}" class="btn btn-success btn-sm">Add to Cart</a>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    {% empty %}
-    <div class="col-12">
-        <p>No books found in this genre.</p>
-    </div>
-    {% endfor %}
-</div>
+        </section>
+        <!-- end: Shop products -->
 {% endblock %}
